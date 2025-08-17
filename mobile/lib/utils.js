@@ -9,3 +9,20 @@ export function formatDate(dateString) {
     day: "numeric",
   });
 }
+
+export function formatCurrency(
+  amount = 0,
+  currency = { code: "USD", locale: "en-US", symbol: "$" }
+) {
+  const value = Number(amount) || 0;
+  try {
+    return new Intl.NumberFormat(currency.locale, {
+      style: "currency",
+      currency: currency.code,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch (err) {
+    // fallback simple formatter
+    return `${currency.symbol}${value.toFixed(2)}`;
+  }
+}

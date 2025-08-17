@@ -1,9 +1,9 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from "react-native";
-import { styles } from "../../assets/styles/auth.styles";
+import { createAuthStyles } from "../../assets/styles/auth.styles";
+import { useTheme } from "../../context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../../constants/colors";
 import { useRouter } from "expo-router";
 
 export default function ForgotPasswordScreen() {
@@ -11,6 +11,8 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const { theme } = useTheme();
+  const styles = createAuthStyles(theme);
   const router = useRouter();
 
   const onSendLink = async () => {
@@ -37,9 +39,9 @@ export default function ForgotPasswordScreen() {
 
   if (!isLoaded) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator size="large" color="#8B593E" />
-        <Text style={{ marginTop: 16, color: "#8B593E", fontWeight: "bold" }}>
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}> 
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={{ marginTop: 16, color: theme.primary, fontWeight: "bold" }}>
           Loading...
         </Text>
       </View>
@@ -65,16 +67,16 @@ export default function ForgotPasswordScreen() {
         <Text style={styles.buttonText}>Send Reset Link</Text>
       </TouchableOpacity>
       {sent && (
-        <Text style={{ color: "#4A3428", marginTop: 8, textAlign: "center" }}>
+        <Text style={{ color: theme.text, marginTop: 8, textAlign: "center" }}>
           A sign-in link has been sent to your email. Click the link in your email to sign in automatically.
         </Text>
       )}
       {error ? (
         <View style={styles.errorBox}>
-          <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
+          <Ionicons name="alert-circle" size={20} color={theme.expense || theme.primary} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity onPress={() => setError("")}>
-            <Ionicons name="close" size={20} color={COLORS.textLight} />
+            <Ionicons name="close" size={20} color={theme.textLight} />
           </TouchableOpacity>
         </View>
       ) : null}

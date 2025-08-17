@@ -11,8 +11,10 @@ import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useState } from "react";
 import { API_URL } from "../../constants/api";
-import { styles } from "../../assets/styles/create.styles";
-import { COLORS } from "../../constants/colors";
+import { createCreateStyles } from "../../assets/styles/create.styles";
+import { useTheme } from "../../context/ThemeContext";
+import { useCurrency } from '../../context/CurrencyContext';
+import CurrencySwitcher from '../../components/CurrencySwitcher';
 import { Ionicons } from "@expo/vector-icons";
 
 const CATEGORIES = [
@@ -27,6 +29,9 @@ const CATEGORIES = [
 
 const CreateScreen = () => {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = createCreateStyles(theme);
+  const { currency, setCurrency, available, toBase } = useCurrency();
   const { user } = useUser();
 
   const [title, setTitle] = useState("");
@@ -48,9 +53,12 @@ const CreateScreen = () => {
     setIsLoading(true);
     try {
       // Format the amount (negative for expenses, positive for income)
-      const formattedAmount = isExpense
+      const formattedAmountLocal = isExpense
         ? -Math.abs(parseFloat(amount))
         : Math.abs(parseFloat(amount));
+
+      // convert the user-entered amount (in selected currency) back to base (USD) for storage
+      const formattedAmount = toBase(formattedAmountLocal);
 
       const response = await fetch(`${API_URL}/transactions`, {
         method: "POST",
@@ -86,7 +94,7 @@ const CreateScreen = () => {
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Transaction</Text>
         <TouchableOpacity
@@ -95,12 +103,12 @@ const CreateScreen = () => {
           disabled={isLoading}
         >
           <Text style={styles.saveButton}>{isLoading ? "Saving..." : "Save"}</Text>
-          {!isLoading && <Ionicons name="checkmark" size={18} color={COLORS.primary} />}
+          {!isLoading && <Ionicons name="checkmark" size={18} color={theme.primary} />}
         </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
-        <View style={styles.typeSelector}>
+    <View style={styles.typeSelector}>
           {/* EXPENSE SELECTOR */}
           <TouchableOpacity
             style={[styles.typeButton, isExpense && styles.typeButtonActive]}
@@ -109,7 +117,7 @@ const CreateScreen = () => {
             <Ionicons
               name="arrow-down-circle"
               size={22}
-              color={isExpense ? COLORS.white : COLORS.expense}
+              color={isExpense ? theme.white : theme.expense}
               style={styles.typeIcon}
             />
             <Text style={[styles.typeButtonText, isExpense && styles.typeButtonTextActive]}>
@@ -125,7 +133,7 @@ const CreateScreen = () => {
             <Ionicons
               name="arrow-up-circle"
               size={22}
-              color={!isExpense ? COLORS.white : COLORS.income}
+              color={!isExpense ? theme.white : theme.income}
               style={styles.typeIcon}
             />
             <Text style={[styles.typeButtonText, !isExpense && styles.typeButtonTextActive]}>
@@ -136,11 +144,11 @@ const CreateScreen = () => {
 
         {/* AMOUNT CONTAINER */}
         <View style={styles.amountContainer}>
-          <Text style={styles.currencySymbol}>$</Text>
+          <CurrencySwitcher compact />
           <TextInput
             style={styles.amountInput}
             placeholder="0.00"
-            placeholderTextColor={COLORS.textLight}
+            placeholderTextColor={theme.textLight}
             value={amount}
             onChangeText={setAmount}
             keyboardType="numeric"
@@ -152,13 +160,13 @@ const CreateScreen = () => {
           <Ionicons
             name="create-outline"
             size={22}
-            color={COLORS.textLight}
+            color={theme.textLight}
             style={styles.inputIcon}
           />
           <TextInput
             style={styles.input}
             placeholder="Transaction Title"
-            placeholderTextColor={COLORS.textLight}
+            placeholderTextColor={theme.textLight}
             value={title}
             onChangeText={setTitle}
           />
@@ -166,7 +174,7 @@ const CreateScreen = () => {
 
         {/* TITLE */}
         <Text style={styles.sectionTitle}>
-          <Ionicons name="pricetag-outline" size={16} color={COLORS.text} /> Category
+          <Ionicons name="pricetag-outline" size={16} color={theme.text} /> Category
         </Text>
 
         <View style={styles.categoryGrid}>
@@ -182,7 +190,7 @@ const CreateScreen = () => {
               <Ionicons
                 name={category.icon}
                 size={20}
-                color={selectedCategory === category.name ? COLORS.white : COLORS.text}
+                color={selectedCategory === category.name ? theme.white : theme.text}
                 style={styles.categoryIcon}
               />
               <Text
@@ -200,7 +208,7 @@ const CreateScreen = () => {
 
       {isLoading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       )}
     </View>

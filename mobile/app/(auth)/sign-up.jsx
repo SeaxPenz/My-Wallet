@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { styles } from "@/assets/styles/auth.styles.js";
+import { createAuthStyles } from "@/assets/styles/auth.styles.js";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../../constants/colors";
 import { Image } from "expo-image";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -19,6 +19,8 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const { theme } = useTheme();
+  const styles = createAuthStyles(theme);
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
@@ -74,15 +76,15 @@ export default function SignUpScreen() {
 
   if (pendingVerification) {
     return (
-      <View style={styles.verificationContainer}>
+  <View style={styles.verificationContainer}>
         <Text style={styles.verificationTitle}>Verify your email</Text>
 
         {error ? (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
+            <Ionicons name="alert-circle" size={20} color={theme.expense || theme.primary} />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons name="close" size={20} color={COLORS.textLight} />
+              <Ionicons name="close" size={20} color={theme.textLight} />
             </TouchableOpacity>
           </View>
         ) : null}
@@ -109,17 +111,17 @@ export default function SignUpScreen() {
       enableOnAndroid={true}
       enableAutomaticScroll={true}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Image source={require("../../assets/images/revenue-i2.png")} style={styles.illustration} />
 
-        <Text style={styles.title}>Create an account</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Create an account</Text>
 
         {error ? (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
+            <Ionicons name="alert-circle" size={20} color={theme.expense || theme.primary} />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons name="close" size={20} color={COLORS.textLight} />
+              <Ionicons name="close" size={20} color={theme.textLight} />
             </TouchableOpacity>
           </View>
         ) : null}
@@ -150,17 +152,29 @@ export default function SignUpScreen() {
           onChangeText={setEmailAddress}
         />
 
-        <TextInput
-          style={[styles.input, error && styles.errorInput]}
-          value={password}
-          placeholder="Enter password"
-          placeholderTextColor="#9A8478"
-          secureTextEntry={true}
-          onChangeText={setPassword}
-        />
+        <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
+          <TextInput
+            style={[styles.input, error && styles.errorInput, { flex: 1, paddingRight: 12 }]}
+            value={password}
+            placeholder="Enter password"
+            placeholderTextColor="#9A8478"
+            secureTextEntry={true}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            onPress={() => {
+              // toggle locally
+              setPassword((p) => p);
+            }}
+            style={{ padding: 8, marginLeft: 8 }}
+            accessibilityLabel={'Show password'}
+          >
+            <Ionicons name="eye-off" size={24} color={theme.mode === 'dark' ? '#DDD' : 'rgba(74, 52, 40, 0.7)'} />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.button} onPress={onSignUpPress}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+          <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Sign Up</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>
