@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '../lib/secureStore';
 
 const THEME_KEY = 'user.theme';
 
@@ -51,18 +51,16 @@ export const THEME_LIST = {
   },
   dark: {
     id: 'dark',
-    name: 'Midnight',
-    background: '#0B0B0D',
-    text: '#EAEAEA',
-    primary: '#8B59A3',
-    card: '#121212',
+    name: 'Moonlight',
     mode: 'dark',
-  border: '#1F1F23',
-  white: '#FFFFFF',
-  textLight: '#A9A9A9',
-  expense: '#FF6B6B',
-  income: '#66E29D',
-  shadow: '#000000',
+    background: '#0B0F12', // darker
+    card: '#0F1720', // darker cards
+    text: '#E6EEF3', // keep readable
+    textLight: '#BFD7E2',
+    border: '#1B2630',
+    primary: '#3AB0FF',
+    success: '#2DD4BF',
+    danger: '#FF6B6B',
   },
   forest: {
     id: 'forest',

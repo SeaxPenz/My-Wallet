@@ -1,12 +1,13 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { createHomeStyles } from "../assets/styles/home.styles";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatCurrency } from "../lib/utils";
+import { Ionicons } from '@expo/vector-icons';
 
 
-export const BalanceCard = ({ summary = { balance: 0, income: 0, expenses: 0 } }) => {
+export const BalanceCard = ({ summary = { balance: 0, income: 0, expenses: 0 }, onRefresh = null }) => {
 	const { balance, income, expenses } = summary || {};
 		const { currency, convert } = useCurrency();
 	const { theme } = useTheme();
@@ -14,6 +15,11 @@ export const BalanceCard = ({ summary = { balance: 0, income: 0, expenses: 0 } }
 
 	return (
 		<View style={styles.balanceCard}>
+			{onRefresh ? (
+				<TouchableOpacity onPress={onRefresh} style={{ position: 'absolute', top: 12, right: 12, padding: 8 }}>
+					<Ionicons name="refresh" size={18} color={theme.textLight} />
+				</TouchableOpacity>
+			) : null}
 			<Text style={styles.balanceTitle}>Total Balance</Text>
 			<Text style={styles.balanceAmount}>{formatCurrency(convert(balance), currency)}</Text>
 

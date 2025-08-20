@@ -21,7 +21,7 @@ export function formatCurrency(
       currency: currency.code,
       maximumFractionDigits: 2,
     }).format(value);
-  } catch (err) {
+  } catch (_err) {
     // fallback simple formatter
     return `${currency.symbol}${value.toFixed(2)}`;
   }

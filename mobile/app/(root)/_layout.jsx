@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-expo";
+import { useSafeUser as useUser } from "../../hooks/useSafeUser";
 import { Redirect } from "expo-router";
 import Stack from "expo-router/stack";
 

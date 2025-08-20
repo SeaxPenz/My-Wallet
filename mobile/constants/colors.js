@@ -58,5 +58,6 @@ export const THEMES = {
   ocean: oceanTheme,
 };
 
-// 👇 change this to switch theme
-export const COLORS = THEMES.forest;
+// Legacy: the previous `COLORS` named export was removed in favor of runtime
+// theming via ThemeContext and the `THEMES` map. Use `THEMES['forest']` or the
+// ThemeContext hook (useTheme) to access theme values at runtime.

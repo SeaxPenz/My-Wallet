@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
+import useSafeSignUp from '../../hooks/useSafeSignUp';
 import { useRouter } from "expo-router";
 import { createAuthStyles } from "@/assets/styles/auth.styles.js";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { Image } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const { isLoaded, signUp, setActive } = useSafeSignUp();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
@@ -21,6 +21,19 @@ export default function SignUpScreen() {
   const [error, setError] = useState("");
   const { theme } = useTheme();
   const styles = createAuthStyles(theme);
+
+  // If Clerk isn't configured in this environment, show a friendly fallback
+  if (!isLoaded) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: theme.text, fontSize: 18, marginBottom: 12 }}>Sign-up is disabled in this environment</Text>
+        <Text style={{ color: theme.textLight, textAlign: 'center', marginBottom: 12 }}>Set a valid EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in `mobile/.env` to enable sign-up and login flows.</Text>
+        <TouchableOpacity onPress={() => router.replace('/')} style={styles.button}>
+          <Text style={styles.buttonText}>Go back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
@@ -112,7 +125,7 @@ export default function SignUpScreen() {
       enableAutomaticScroll={true}
     >
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Image source={require("../../assets/images/revenue-i2.png")} style={styles.illustration} />
+  <Image source={require("../../assets/images/revenue-i2.png")} style={styles.illustration} resizeMode="contain" />
 
         <Text style={[styles.title, { color: theme.text }]}>Create an account</Text>
 
@@ -152,9 +165,9 @@ export default function SignUpScreen() {
           onChangeText={setEmailAddress}
         />
 
-        <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.inputWrapper}>
           <TextInput
-            style={[styles.input, error && styles.errorInput, { flex: 1, paddingRight: 12 }]}
+            style={[styles.inputWithIcon, error && styles.errorInput]}
             value={password}
             placeholder="Enter password"
             placeholderTextColor="#9A8478"
@@ -166,15 +179,19 @@ export default function SignUpScreen() {
               // toggle locally
               setPassword((p) => p);
             }}
-            style={{ padding: 8, marginLeft: 8 }}
+            style={styles.inputIconContainer}
             accessibilityLabel={'Show password'}
           >
-            <Ionicons name="eye-off" size={24} color={theme.mode === 'dark' ? '#DDD' : 'rgba(74, 52, 40, 0.7)'} />
+            <Ionicons name="eye-off" size={20} color={theme.mode === 'dark' ? '#DDD' : 'rgba(74, 52, 40, 0.7)'} />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={onSignUpPress}>
-          <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Sign Up</Text>
+        <TouchableOpacity
+          style={[styles.button, !isLoaded && { opacity: 0.6 }]}
+          onPress={onSignUpPress}
+          disabled={!isLoaded}
+        >
+          <Text style={styles.buttonText}>{isLoaded ? 'Sign Up' : 'Sign Up (disabled)'}</Text>
         </TouchableOpacity>
 
         <View style={styles.footerContainer}>

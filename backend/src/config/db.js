@@ -12,11 +12,11 @@ export async function initDb() {
     await sql`CREATE TABLE IF NOT EXISTS transactions (
       id SERIAL PRIMARY KEY,
       user_id VARCHAR(255) NOT NULL,
-      email VARCHAR(100) UNIQUE,
+      email VARCHAR(100),
       title VARCHAR(255) NOT NULL,
-      amount DECIMAL(10, 2) NOT NULL,
+      amount DECIMAL(12, 2) NOT NULL,
       category VARCHAR(50) NOT NULL,
-      created_at DATE NOT NULL DEFAULT CURRENT_DATE
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )`;
     console.log("Database connected and table created successfully.");
   } catch (error) {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "../lib/secureStore";
 
 const STORE_KEY = "user.currency";
 const STORE_KEY_RATES = "currency.rates";
@@ -20,6 +20,7 @@ const CurrencyContext = createContext({
 export const CurrencyProvider = ({ children }) => {
   const [currency, setCurrencyState] = useState(available.USD);
   const [rates, setRates] = useState({ USD: 1 });
+  const [version, setVersion] = useState(Date.now());
 
   // fetch simple exchange rates with USD as base
   // load cached rates and fetch fresh rates
@@ -61,6 +62,8 @@ export const CurrencyProvider = ({ children }) => {
       if (data && data.rates) {
         const newRates = { ...data.rates, USD: 1 };
         setRates(newRates);
+  // bump version so consumers re-render with new rates immediately
+  setVersion(Date.now());
         try {
           await SecureStore.setItemAsync(STORE_KEY_RATES, JSON.stringify({ rates: newRates, ts: Date.now() }));
         } catch (err) {
@@ -86,12 +89,20 @@ export const CurrencyProvider = ({ children }) => {
 
   const setCurrency = async (code) => {
     if (!available[code]) return;
-    setCurrencyState(available[code]);
+  setCurrencyState(available[code]);
     try {
       await SecureStore.setItemAsync(STORE_KEY, code);
     } catch (err) {
       console.warn("Currency save failed", err);
     }
+    // proactively fetch latest rates for the newly selected currency so UI updates immediately
+    try {
+      await fetchRates(true);
+    } catch (err) {
+      console.warn('Failed to refresh rates after currency change', err);
+    }
+  // force consumers to refresh
+  setVersion(Date.now());
   };
 
   const convert = (amount = 0) => {
@@ -114,7 +125,7 @@ export const CurrencyProvider = ({ children }) => {
   };
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, available, rates, convert, refreshRates, toBase }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, available, rates, convert, refreshRates, toBase, version }}>
       {children}
     </CurrencyContext.Provider>
   );

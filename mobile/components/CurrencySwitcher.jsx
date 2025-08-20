@@ -5,15 +5,21 @@ import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function CurrencySwitcher({ compact = false }) {
-  const { currency, setCurrency, available } = useCurrency();
+  const { currency, setCurrency, available, refreshRates } = useCurrency();
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
 
   const items = Object.values(available);
+  const themedStyles = StyleSheet.create({
+    trigger: { flexDirection: 'row', alignItems: 'center' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', paddingTop: 56, alignItems: 'flex-end' },
+  menu: { alignSelf: 'flex-end', marginTop: 8, marginRight: 12, borderRadius: 8, padding: 6, minWidth: 140, elevation: 6, maxHeight: '55%', overflow: 'hidden' },
+    menuItem: { padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  });
 
   return (
     <View>
-      <TouchableOpacity style={styles.trigger} onPress={() => setOpen(true)}>
+      <TouchableOpacity style={themedStyles.trigger} onPress={() => setOpen(true)}>
         <Text style={{ color: theme.text, fontWeight: '700' }}>{currency.symbol}</Text>
         {!compact && <Text style={{ color: theme.text, marginLeft: 6 }}>{currency.code}</Text>}
         <Ionicons name="chevron-down" size={14} color={theme.text} style={{ marginLeft: 6 }} />
@@ -21,15 +27,17 @@ export default function CurrencySwitcher({ compact = false }) {
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <View style={[styles.menu, { backgroundColor: theme.card }]}> 
+          <View style={[themedStyles.menu, { backgroundColor: theme.card }]}> 
             <FlatList
               data={items}
               keyExtractor={(i) => i.code}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.menuItem}
+      style={themedStyles.menuItem}
                   onPress={() => {
                     setCurrency(item.code);
+                    // refresh rates in background to ensure freshest rates and update UI instantly
+                    try { refreshRates(); } catch (_) { /* ignore */ }
                     setOpen(false);
                   }}
                 >
@@ -47,7 +55,7 @@ export default function CurrencySwitcher({ compact = false }) {
 
 const styles = StyleSheet.create({
   trigger: { flexDirection: 'row', alignItems: 'center' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
-  menu: { position: 'absolute', right: 12, top: 60, borderRadius: 8, padding: 6, minWidth: 140, elevation: 6 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', paddingTop: 56, alignItems: 'flex-end' },
+  menu: { alignSelf: 'flex-end', marginTop: 8, marginRight: 12, borderRadius: 8, padding: 6, minWidth: 140, elevation: 6, maxHeight: '55%', overflow: 'hidden' },
   menuItem: { padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });

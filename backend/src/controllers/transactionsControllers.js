@@ -1,28 +1,41 @@
+import { sql } from "../config/db.js";
+
 export async function getTransactionsByUserId(req, res) {
   try {
-    const transactions =
-      await sql`SELECT * FROM transactions WHERE user_id = ${userId} ORDER BY created_at DESC`;
-    return transactions;
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
+    const transactions = await sql`
+      SELECT * FROM transactions WHERE user_id = ${userId} ORDER BY created_at DESC
+    `;
+    return res.status(200).json(transactions);
   } catch (error) {
     console.log("Error getting the transactions:", error);
-    throw new Error("Failed to get transactions");
+    return res.status(500).json({ error: "Failed to get transactions" });
   }
 }
 
 export async function createTransaction(req, res) {
   try {
-    const { user_id, email, title, amount, category } = req.body;
+    const { user_id, email, title, amount, category, created_at } = req.body;
+    console.log("createTransaction: body=", req.body);
     if (!user_id || !title || !amount || !category) {
       return res.status(400).json({ error: "All fields are required" });
     }
     const transaction =
-      await sql`INSERT INTO transactions (user_id, email, title, amount, category)
-      VALUES (${user_id}, ${email}, ${title}, ${amount}, ${category}) RETURNING *`;
+      await sql`INSERT INTO transactions (user_id, email, title, amount, category, created_at)
+      VALUES (${user_id}, ${email}, ${title}, ${amount}, ${category}, ${
+        created_at || sql`NOW()`
+      }) RETURNING *`;
     console.log("Transaction created successfully:", transaction);
     res.status(201).json(transaction[0]);
   } catch (error) {
-    console.log("Error creating transaction:", error);
-    return res.status(500).json({ error: "Failed to create transaction" });
+    console.error("Error creating transaction:", error);
+    // Print stack if available for deeper debugging in dev
+    if (error && error.stack) console.error(error.stack);
+    // Include error message in response during development to speed debugging
+    return res
+      .status(500)
+      .json({ error: "Failed to create transaction", details: error.message });
   }
 }
 

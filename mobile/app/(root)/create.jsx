@@ -4,11 +4,10 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  ActivityIndicatorBase,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
+import { useSafeUser as useUser } from "../../hooks/useSafeUser";
 import { useState } from "react";
 import { API_URL } from "../../constants/api";
 import { createCreateStyles } from "../../assets/styles/create.styles";
@@ -31,11 +30,12 @@ const CreateScreen = () => {
   const router = useRouter();
   const { theme } = useTheme();
   const styles = createCreateStyles(theme);
-  const { currency, setCurrency, available, toBase } = useCurrency();
+  const { toBase } = useCurrency();
   const { user } = useUser();
 
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
+  const [createdAt, setCreatedAt] = useState(new Date().toISOString());
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isExpense, setIsExpense] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,34 +53,57 @@ const CreateScreen = () => {
     setIsLoading(true);
     try {
       // Format the amount (negative for expenses, positive for income)
-      const formattedAmountLocal = isExpense
-        ? -Math.abs(parseFloat(amount))
-        : Math.abs(parseFloat(amount));
+      const parsed = parseFloat(amount.replace(/,/g, ''));
+      if (isNaN(parsed) || parsed === 0) {
+        throw new Error('Please enter a valid non-zero amount');
+      }
+
+      const formattedAmountLocal = isExpense ? -Math.abs(parsed) : Math.abs(parsed);
 
       // convert the user-entered amount (in selected currency) back to base (USD) for storage
-      const formattedAmount = toBase(formattedAmountLocal);
+      const formattedAmount = Number(toBase(formattedAmountLocal).toFixed(2));
 
-      const response = await fetch(`${API_URL}/transactions`, {
+      // include user email for backend validation (some backends expect email)
+      const email = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || '';
+
+    const response = await fetch(`${API_URL}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           user_id: user.id,
+          email,
           title,
           amount: formattedAmount,
           category: selectedCategory,
+      created_at: createdAt,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.log(errorData);
-        throw new Error(errorData.error || "Failed to create transaction");
+        const text = await response.text();
+        console.error('Create failed:', response.status, text);
+        // try to parse JSON error body, fallback to raw text
+        try {
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.error || JSON.stringify(errorData));
+        } catch (_parseErr) {
+          throw new Error(text || `HTTP ${response.status}`);
+        }
       }
 
-      Alert.alert("Success", "Transaction created successfully");
-      router.back();
+      const createdText = await response.text();
+      let created = null;
+      try {
+        created = JSON.parse(createdText);
+        console.log('Created transaction:', created);
+      } catch (_err) {
+        console.warn('Created response was not JSON:', createdText);
+      }
+  Alert.alert("Success", "Transaction created successfully");
+  // Ensure we go to home and trigger its focus effect which reloads data
+  router.replace('/');
     } catch (error) {
       Alert.alert("Error", error.message || "Failed to create transaction");
       console.error("Error creating transaction:", error);
@@ -93,18 +116,11 @@ const CreateScreen = () => {
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
-        </TouchableOpacity>
+        {/* Left spacer kept so title is centered when SafeScreen renders the back arrow */}
+        <View style={{ width: 48 }} />
         <Text style={styles.headerTitle}>New Transaction</Text>
-        <TouchableOpacity
-          style={[styles.saveButtonContainer, isLoading && styles.saveButtonDisabled]}
-          onPress={handleCreate}
-          disabled={isLoading}
-        >
-          <Text style={styles.saveButton}>{isLoading ? "Saving..." : "Save"}</Text>
-          {!isLoading && <Ionicons name="checkmark" size={18} color={theme.primary} />}
-        </TouchableOpacity>
+        {/* Right spacer to match left */}
+        <View style={{ width: 48 }} />
       </View>
 
       <View style={styles.card}>
@@ -153,6 +169,20 @@ const CreateScreen = () => {
             onChangeText={setAmount}
             keyboardType="numeric"
           />
+        </View>
+
+        {/* DATE/TIME PICKER (simple) */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 8 }}>
+          <Text style={{ color: theme.textLight, fontSize: 14 }}>Date</Text>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            value={createdAt}
+            placeholder="YYYY-MM-DDTHH:MM:SS.sssZ"
+            onChangeText={setCreatedAt}
+          />
+          <TouchableOpacity onPress={() => setCreatedAt(new Date().toISOString())} style={{ padding: 8 }}>
+            <Text style={{ color: theme.primary }}>Now</Text>
+          </TouchableOpacity>
         </View>
 
         {/* INPUT CONTAINER */}
@@ -204,6 +234,21 @@ const CreateScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
+      </View>
+
+      {/* Bottom save button */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
+        <TouchableOpacity
+          onPress={handleCreate}
+          disabled={isLoading}
+          style={[
+            { backgroundColor: theme.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
+            isLoading && { opacity: 0.6 }
+          ]}
+        >
+          <Text style={{ color: theme.white, fontWeight: '700', marginRight: 8 }}>{isLoading ? 'Saving...' : 'Save Transaction'}</Text>
+          {!isLoading && <Ionicons name="checkmark" size={18} color={theme.white} />}
+        </TouchableOpacity>
       </View>
 
       {isLoading && (

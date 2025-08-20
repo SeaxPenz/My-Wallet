@@ -1,4 +1,4 @@
-import { useSignIn } from "@clerk/clerk-expo";
+import useSafeSignIn from '../../hooks/useSafeSignIn';
 import { Link, useRouter } from "expo-router";
 import { Text, TextInput, TouchableOpacity, View, Image } from "react-native";
 import { useState } from "react";
@@ -6,18 +6,15 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { createAuthStyles } from "../../assets/styles/auth.styles";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
-import ThemeSwitcher from "../../components/ThemeSwitcher";
 
 export default function Page() {
-  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signIn, setActive, isLoaded } = useSafeSignIn();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotSent, setForgotSent] = useState(false);
-  const [forgotError, setForgotError] = useState("");
+  // forgot password state removed (handled on separate screen)
   const [showPassword, setShowPassword] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
@@ -54,7 +51,7 @@ export default function Page() {
       } else if (signInAttempt.status === "needs_second_factor") {
         setError("Further steps required.");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Sign in failed. Please try again.");
     }
   };
@@ -72,29 +69,12 @@ export default function Page() {
       } else {
         setError("Verification failed. Try again.");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Invalid code. Please try again.");
     }
   };
 
-  // Handle forgot password
-  const onForgotPassword = async () => {
-    setForgotError("");
-    setForgotSent(false);
-    if (!forgotEmail) {
-      setForgotError("Please enter your registered email address.");
-      return;
-    }
-    try {
-      await signIn.create({
-        strategy: "reset_password_email_code",
-        identifier: forgotEmail,
-      });
-      setForgotSent(true);
-    } catch (err) {
-      setForgotError("Unable to send reset link. Please check your email address.");
-    }
-  };
+  // Forgot password flow is implemented on its own screen; not used here
 
   return (
     <KeyboardAwareScrollView
@@ -105,9 +85,8 @@ export default function Page() {
       extraScrollHeight={30}
     >
       <View style={{ ...styles.container, backgroundColor: currentTheme.background }}>
-  <ThemeSwitcher />
-        <Image source={require("../../assets/images/revenue-i4.png")} style={styles.illustration} />
-        <Text style={[styles.title, { color: currentTheme.text }]}>Welcome Back</Text>
+  <Image source={require("../../assets/images/revenue-i4.png")} style={styles.illustration} resizeMode="contain" />
+        <Text style={[styles.title, { color: currentTheme.text, textAlign: 'center' }]}>Welcome Back</Text>
 
         {error ? (
           <View style={styles.errorBox}>
@@ -126,39 +105,45 @@ export default function Page() {
               autoCapitalize="none"
               value={emailAddress}
               placeholder="Enter email"
-              placeholderTextColor="#9A8478"
+              placeholderTextColor={currentTheme.textLight}
+              keyboardType="email-address"
+              autoComplete="email"
               onChangeText={setEmailAddress}
             />
 
             {/* Password field with eye icon centered vertically */}
-            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.inputWrapper}>
               <TextInput
                 style={[
-                  styles.input,
+                  styles.inputWithIcon,
                   error && styles.errorInput,
-                  { flex: 1, paddingRight: 12 }
                 ]}
                 value={password}
                 placeholder="Enter password"
-                placeholderTextColor="#9A8478"
+                placeholderTextColor={currentTheme.textLight}
                 secureTextEntry={!showPassword}
                 onChangeText={setPassword}
+                autoComplete="password"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword((prev) => !prev)}
-                style={{ padding: 8, marginLeft: 8 }}
+                style={styles.inputIconContainer}
                 accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
               >
                 <MaterialIcons
                   name={showPassword ? "visibility" : "visibility-off"}
-                  size={24}
+                  size={20}
                   color={currentTheme.mode === 'dark' ? '#DDD' : 'rgba(74, 52, 40, 0.7)'}
                 />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.button} onPress={onSignInPress}>
-              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Sign In</Text>
+            <TouchableOpacity
+              style={[styles.button, !isLoaded && { opacity: 0.6 }]}
+              onPress={onSignInPress}
+              disabled={!isLoaded}
+            >
+              <Text style={styles.buttonText}>{isLoaded ? 'Sign In' : 'Sign In (disabled)'}</Text>
             </TouchableOpacity>
 
             {/* Forgot password option */}

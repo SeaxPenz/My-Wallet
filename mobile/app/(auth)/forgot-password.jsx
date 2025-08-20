@@ -1,4 +1,4 @@
-import { useSignIn } from "@clerk/clerk-expo";
+import useSafeSignIn from '../../hooks/useSafeSignIn';
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { createAuthStyles } from "../../assets/styles/auth.styles";
@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 export default function ForgotPasswordScreen() {
-  const { signIn, isLoaded } = useSignIn();
+  const { signIn, isLoaded } = useSafeSignIn();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -32,8 +32,8 @@ export default function ForgotPasswordScreen() {
         identifier: email,
       });
       setSent(true);
-    } catch (err) {
-      setError("Unable to send reset link. Please check your email address.");
+    } catch (_err) {
+      setError("Unable to send reset link. Please check your email address!");
     }
   };
 
@@ -50,7 +50,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <View style={styles.container}>
-      <Image source={require("../../assets/images/revenue-i4.png")} style={styles.illustration} />
+  <Image source={require("../../assets/images/revenue-i4.png")} style={styles.illustration} resizeMode="contain" />
       <Text style={[styles.title, { textAlign: "center" }]}>Forgot Password</Text>
       <Text style={[styles.promptText, { textAlign: "center" }]}>
         Enter your registered email to receive a sign-in link.

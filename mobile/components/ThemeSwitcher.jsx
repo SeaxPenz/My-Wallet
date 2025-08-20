@@ -1,44 +1,57 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, Animated } from 'react-native';
+import { View, TouchableOpacity, Text, Modal, Pressable, StyleSheet, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme, THEME_LIST } from '../context/ThemeContext';
 
-export const themes = THEME_LIST; // keep compatibility export
+export const themes = THEME_LIST; // compatibility export
 
 export default function ThemeSwitcher({ compact = false }) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
-
   const items = Object.values(THEME_LIST);
 
   return (
     <View style={{ alignItems: 'center', marginBottom: 8 }}>
       <TouchableOpacity
-        onPress={() => setOpen((s) => !s)}
+        onPress={() => setOpen(true)}
         style={{ padding: 8, borderRadius: 10, backgroundColor: theme.card }}
       >
         <MaterialCommunityIcons name={theme.id === 'dark' ? 'weather-night' : 'white-balance-sunny'} size={20} color={theme.text} />
       </TouchableOpacity>
 
-      {open && (
-        <Animated.View style={{ marginTop: 8, backgroundColor: theme.card, padding: 8, borderRadius: 12, elevation: 6 }}>
-          {items.map((t) => (
-            <TouchableOpacity
-              key={t.id}
-              onPress={() => {
-                setTheme(t.id);
-                setOpen(false);
-              }}
-              style={{ flexDirection: 'row', alignItems: 'center', padding: 8 }}
-            >
-              <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: t.primary, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                <Ionicons name={t.id === 'dark' ? 'moon' : t.id === 'forest' ? 'leaf' : t.id === 'purple' ? 'color-palette' : 'sunny'} size={18} color={'#fff'} />
-              </View>
-              <Text style={{ color: theme.text }}>{t.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </Animated.View>
-      )}
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        {/* Backdrop closes modal on press */}
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+          {/* Menu container: align to top-right and don't close when tapping inside */}
+          <View style={[styles.menu, { backgroundColor: theme.card }]}>
+            <TouchableWithoutFeedback onPress={() => { /* swallow touch so backdrop doesn't receive it */ }}>
+              <ScrollView style={{ maxHeight: '55%' }} contentContainerStyle={{ paddingVertical: 6 }}>
+                {items.map(item => (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => {
+                      setTheme(item.id);
+                      setOpen(false);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: item.primary, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                      <Ionicons name={item.id === 'dark' ? 'moon' : item.id === 'forest' ? 'leaf' : item.id === 'purple' ? 'color-palette' : 'sunny'} size={18} color={'#fff'} />
+                    </View>
+                    <Text style={{ color: theme.text }}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </TouchableWithoutFeedback>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-start' },
+  menu: { marginTop: 56, marginRight: 12, marginLeft: 'auto', borderRadius: 8, padding: 6, minWidth: 140, elevation: 6 },
+  menuItem: { padding: 8, flexDirection: 'row', alignItems: 'center' },
+});

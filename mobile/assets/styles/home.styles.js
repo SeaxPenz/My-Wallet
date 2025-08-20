@@ -1,11 +1,11 @@
 // styles/home.styles.js
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
-export const createHomeStyles = (COLORS) =>
+export const createHomeStyles = (theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: COLORS.background,
+      backgroundColor: theme.background,
     },
     content: {
       padding: 20,
@@ -23,38 +23,52 @@ export const createHomeStyles = (COLORS) =>
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
+      gap: 8,
     },
     headerLogo: {
-      width: 75,
-      height: 75,
+      width: 48,
+      height: 48,
+      borderRadius: 8,
+      marginRight: 8,
     },
     welcomeContainer: {
       flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
     },
     welcomeText: {
-      fontSize: 14,
-      color: COLORS.textLight,
-      marginBottom: 2,
+      fontSize: 13,
+      color: theme.textLight,
+      marginBottom: 0,
     },
     usernameText: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: "600",
-      color: COLORS.text,
+      color: theme.text,
+      marginTop: 2,
+    },
+    headerAvatar: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      marginRight: 12,
     },
     headerRight: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 14,
+      paddingLeft: 8,
     },
     headerTitle: {
       fontSize: 28,
       fontWeight: "bold",
-      color: COLORS.text,
+      color: theme.text,
     },
     addButton: {
-      backgroundColor: COLORS.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      backgroundColor: theme.primary,
+      paddingHorizontal: 18,
+      paddingVertical: 12,
       borderRadius: 24,
       flexDirection: "row",
       alignItems: "center",
@@ -62,46 +76,58 @@ export const createHomeStyles = (COLORS) =>
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
+      ...Platform.select({
+        web: {
+          boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
+        },
+      }),
       elevation: 3,
     },
     addButtonText: {
-      color: COLORS.white,
+      color: theme.white,
       fontWeight: "600",
       marginLeft: 4,
     },
     logoutButton: {
       padding: 10,
       borderRadius: 20,
-      backgroundColor: COLORS.card,
+      backgroundColor: theme.card,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
+      ...Platform.select({
+        web: { boxShadow: "0px 1px 2px rgba(0,0,0,0.05)" },
+      }),
       elevation: 1,
     },
     balanceCard: {
-      backgroundColor: COLORS.card,
+      backgroundColor: theme.card,
       borderRadius: 20,
-      padding: 20,
+      padding: 26,
+      minHeight: 140,
       marginBottom: 20,
-      shadowColor: COLORS.shadow,
+      shadowColor: theme.shadow,
       shadowOffset: {
         width: 0,
         height: 2,
       },
       shadowOpacity: 0.1,
       shadowRadius: 3,
+      ...Platform.select({
+        web: { boxShadow: `0px 2px 3px ${theme.shadow}1A` },
+      }),
       elevation: 3,
     },
     balanceTitle: {
       fontSize: 16,
-      color: COLORS.textLight,
+      color: theme.textLight,
       marginBottom: 8,
     },
     balanceAmount: {
-      fontSize: 32,
+      fontSize: 36,
       fontWeight: "bold",
-      color: COLORS.text,
+      color: theme.text,
       marginBottom: 20,
     },
     balanceStats: {
@@ -114,11 +140,11 @@ export const createHomeStyles = (COLORS) =>
     },
     statDivider: {
       borderRightWidth: 1,
-      borderColor: COLORS.border,
+      borderColor: theme.border,
     },
     balanceStatLabel: {
       fontSize: 14,
-      color: COLORS.textLight,
+      color: theme.textLight,
       marginBottom: 4,
     },
     balanceStatAmount: {
@@ -128,22 +154,25 @@ export const createHomeStyles = (COLORS) =>
     sectionTitle: {
       fontSize: 18,
       fontWeight: "600",
-      color: COLORS.text,
+      color: theme.text,
       marginBottom: 15,
     },
     transactionCard: {
-      backgroundColor: COLORS.card,
+      backgroundColor: theme.card,
       borderRadius: 12,
       marginBottom: 10,
       flexDirection: "row",
       alignItems: "center",
-      shadowColor: COLORS.shadow,
+      shadowColor: theme.shadow,
       shadowOffset: {
         width: 0,
         height: 1,
       },
       shadowOpacity: 0.1,
       shadowRadius: 2,
+      ...Platform.select({
+        web: { boxShadow: `0px 1px 2px ${theme.shadow}1A` },
+      }),
       elevation: 2,
     },
     transactionContent: {
@@ -167,12 +196,12 @@ export const createHomeStyles = (COLORS) =>
     transactionTitle: {
       fontSize: 16,
       fontWeight: "500",
-      color: COLORS.text,
+      color: theme.text,
       marginBottom: 4,
     },
     transactionCategory: {
       fontSize: 14,
-      color: COLORS.textLight,
+      color: theme.textLight,
     },
     transactionRight: {
       alignItems: "flex-end",
@@ -184,12 +213,13 @@ export const createHomeStyles = (COLORS) =>
     },
     transactionDate: {
       fontSize: 12,
-      color: COLORS.textLight,
+      color: theme.textLight,
     },
     deleteButton: {
       padding: 15,
       borderLeftWidth: 1,
-      borderLeftColor: COLORS.border,
+      borderLeftColor: theme.border,
+      backgroundColor: "transparent",
     },
     transactionsContainer: {
       marginBottom: 20,
@@ -198,19 +228,22 @@ export const createHomeStyles = (COLORS) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: COLORS.background,
+      backgroundColor: theme.background,
     },
     emptyState: {
-      backgroundColor: COLORS.card,
+      backgroundColor: theme.card,
       borderRadius: 16,
       padding: 30,
       alignItems: "center",
       justifyContent: "center",
       marginTop: 10,
-      shadowColor: COLORS.shadow,
+      shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.1,
       shadowRadius: 2,
+      ...Platform.select({
+        web: { boxShadow: `0px 1px 2px ${theme.shadow}1A` },
+      }),
       elevation: 2,
     },
     emptyStateIcon: {
@@ -219,18 +252,18 @@ export const createHomeStyles = (COLORS) =>
     emptyStateTitle: {
       fontSize: 18,
       fontWeight: "600",
-      color: COLORS.text,
+      color: theme.text,
       marginBottom: 8,
     },
     emptyStateText: {
-      color: COLORS.textLight,
+      color: theme.textLight,
       fontSize: 14,
       textAlign: "center",
       marginBottom: 20,
       lineHeight: 20,
     },
     emptyStateButton: {
-      backgroundColor: COLORS.primary,
+      backgroundColor: theme.primary,
       flexDirection: "row",
       alignItems: "center",
       paddingVertical: 10,
@@ -240,10 +273,11 @@ export const createHomeStyles = (COLORS) =>
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 3,
+      ...Platform.select({ web: { boxShadow: "0px 2px 3px rgba(0,0,0,0.1)" } }),
       elevation: 2,
     },
     emptyStateButtonText: {
-      color: COLORS.white,
+      color: theme.white,
       fontWeight: "600",
       marginLeft: 6,
     },
