@@ -1,7 +1,7 @@
 import { useSafeUser as useUser } from "../../hooks/useSafeUser";
 import { useRouter } from "expo-router";
 import { Alert, FlatList, RefreshControl, Text, TouchableOpacity, View, Image } from "react-native";
-import { useTransactions } from "../../hooks/useTransactions";
+import useTransactions from "../../hooks/useTransactions";
 import React, { useEffect, useState, useCallback } from "react";
 import { useFocusEffect } from '@react-navigation/native';
 import DateTime from '../../components/DateTime';
@@ -20,7 +20,7 @@ import NoTransactionsFound from "../../components/NoTransactionsFound";
 export default function Page() {
   const { theme } = useTheme();
   const styles = createHomeStyles(theme);
-  const { refreshRates } = useCurrency();
+  const { refreshRates, currency, convert } = useCurrency();
   const { user } = useUser();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
@@ -29,6 +29,19 @@ export default function Page() {
   const { transactions, summary, isLoading, loadData, deleteTransaction } = useTransactions(
     user?.id
   );
+
+  // If no authenticated user (Clerk disabled in dev), show a helpful empty state
+  if (!user) {
+    return (
+      <View style={[styles.content, { alignItems: 'center', justifyContent: 'center', flex: 1 }]}>
+        <Text style={{ fontSize: 18, color: theme.text, marginBottom: 8 }}>You are not signed in</Text>
+        <Text style={{ color: theme.textLight, marginBottom: 12 }}>Authentication is disabled in this dev environment. Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in mobile/.env to enable sign-in.</Text>
+        <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} style={{ backgroundColor: theme.primary, padding: 12, borderRadius: 8 }}>
+          <Text style={{ color: theme.white }}>Go to Sign In</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -98,21 +111,27 @@ export default function Page() {
     <View style={styles.content}>
       {/* HEADER */}
       <View style={styles.header}>
+
         <View style={styles.headerLeft}>
           <View style={styles.welcomeContainer}>
             {profile?.imageUri ? (
-             <TouchableOpacity onPress={() => router.push('/profile')}>
-               <Image source={{ uri: profile.imageUri }} style={styles.headerAvatar} />
-             </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/profile')}>
+                <Image source={{ uri: profile.imageUri }} style={styles.headerAvatar} />
+              </TouchableOpacity>
             ) : null}
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.welcomeText}>Welcome,</Text>
-              <Text style={styles.usernameText}>{profile?.name?.split(' ')[0] || (user ? user.firstName || user.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] : '')}</Text>
+              <Text style={styles.usernameText} numberOfLines={1} ellipsizeMode="tail">
+                {profile?.name?.split(' ')[0] || (user ? user.firstName || user.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] : '')}
+              </Text>
+              {/* DateTime in its own row, bold and visually distinct */}
+              <View style={{ marginTop: 2, alignItems: 'flex-start' }}>
+                <DateTime syncApi={true} />
+              </View>
             </View>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <DateTime syncApi={true} />
           <TouchableOpacity style={styles.addButton} onPress={() => router.push("/create")}> 
             <Ionicons name="add" size={20} color={theme.white} />
             <Text style={styles.addButtonText}>Add</Text>
@@ -120,7 +139,7 @@ export default function Page() {
         </View>
       </View>
 
-  <BalanceCard summary={summary} onRefresh={refreshRates} />
+  <BalanceCard summary={summary} onRefresh={refreshRates} theme={theme} currency={currency} convert={convert} />
 
       {/* lightweight pie: income vs expenses */}
       <View style={{ alignItems: 'center', marginTop: 12 }}>
@@ -164,7 +183,9 @@ function PieChartInline({ income = 0, expenses = 0 }) {
 
   return (
     <Svg width={size} height={size}>
-      <G rotation={-90} originX={size / 2} originY={size / 2}>
+      {/* use explicit transform strings so react-native-svg on web doesn't emit
+          hyphenated DOM props like `transform-origin` which React warns about */}
+      <G transform={`rotate(-90 ${size / 2} ${size / 2})`}>
         {/* background */}
         <Circle cx={size / 2} cy={size / 2} r={radius} stroke="#EEE" strokeWidth={strokeWidth} fill="transparent" />
         {/* income slice */}
@@ -188,9 +209,7 @@ function PieChartInline({ income = 0, expenses = 0 }) {
           strokeDasharray={`${expensesArc} ${circumference - expensesArc}`}
           strokeLinecap="round"
           fill="transparent"
-          rotation={(incomePct * 360)}
-          originX={size / 2}
-          originY={size / 2}
+          transform={`rotate(${incomePct * 360} ${size / 2} ${size / 2})`}
         />
       </G>
     </Svg>

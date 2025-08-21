@@ -1,53 +1,57 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import { neon } from "@neondatabase/serverless";
+import { Client } from "pg";
 
 dotenv.config();
-const sql = neon(process.env.DATABASE_URL);
+const migrationsDir = path.join(__dirname, "..", "migrations");
 
-async function ensureMigrationsTable() {
-  await sql`CREATE TABLE IF NOT EXISTS migrations (id VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT NOW())`;
-}
+(async () => {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
 
-async function alreadyApplied(id) {
-  const rows = await sql`SELECT id FROM migrations WHERE id = ${id}`;
-  return rows.length > 0;
-}
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS migrations (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+  `);
 
-async function markApplied(id) {
-  await sql`INSERT INTO migrations (id) VALUES (${id})`;
-}
+  const files = fs.existsSync(migrationsDir)
+    ? fs
+        .readdirSync(migrationsDir)
+        .filter((f) => f.endsWith(".sql"))
+        .sort()
+    : [];
 
-async function run() {
-  const migrationsDir = path.join(process.cwd(), "migrations");
-  const files = fs
-    .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith(".sql"))
-    .sort();
-  await ensureMigrationsTable();
   for (const file of files) {
-    const id = file;
-    if (await alreadyApplied(id)) {
-      console.log("Skipping already applied migration", id);
+    const { rows } = await client.query(
+      "SELECT 1 FROM migrations WHERE name = $1",
+      [file]
+    );
+    if (rows.length) {
+      console.log("Skipping already applied migration:", file);
       continue;
     }
-    const sqlText = fs.readFileSync(path.join(migrationsDir, file), "utf8");
-    console.log("Applying migration", id);
+    const sql = fs.readFileSync(path.join(migrationsDir, file), "utf8");
+    console.log("Applying migration:", file);
     try {
-      await sql.unsafe(sqlText);
-      await markApplied(id);
-      console.log("Applied", id);
+      await client.query("BEGIN");
+      await client.query(sql);
+      await client.query("INSERT INTO migrations(name) VALUES($1)", [file]);
+      await client.query("COMMIT");
+      console.log("Applied:", file);
     } catch (err) {
-      console.error("Failed to apply", id, err);
+      await client.query("ROLLBACK");
+      console.error("Migration failed:", file, err);
       process.exit(1);
     }
   }
-  console.log("Migrations complete");
-  process.exit(0);
-}
 
-run().catch((err) => {
+  await client.end();
+  console.log("Migrations complete.");
+})().catch((err) => {
   console.error(err);
   process.exit(1);
 });

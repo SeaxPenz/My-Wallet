@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { useTransactions } from '../hooks/useTransactions';
+import useTransactions from '../hooks/useTransactions';
 import { useSafeUser as useUser } from '../hooks/useSafeUser';
 
 export default function ReportsPage() {

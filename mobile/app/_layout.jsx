@@ -1,6 +1,8 @@
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Slot } from "expo-router";
+// Dev helper: create file-backed Errors on runtime errors to aid Metro symbolication
+import "../utils/devSymbolicate";
 import SafeScreen from "../components/SafeScreen"; // <-- fixed import
 import { StatusBar } from "expo-status-bar";
 import { ThemeProvider } from "../context/ThemeContext";
@@ -13,8 +15,10 @@ export default function RootLayout() {
   const isValidClerkKey =
     typeof publishableKey === "string" &&
     publishableKey.startsWith("pk_") &&
-    !publishableKey.toUpperCase().includes("PLACEHOLDER") &&
-    publishableKey !== "";
+  !publishableKey.toUpperCase().includes("PLACEHOLDER") &&
+  !publishableKey.toLowerCase().includes("replace") &&
+  publishableKey !== "" &&
+  publishableKey !== "pk_test_replace_with_real_key";
 
   if (!isValidClerkKey) {
     console.warn(

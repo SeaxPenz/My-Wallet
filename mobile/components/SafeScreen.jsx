@@ -24,9 +24,7 @@ export default function SafeScreen({ children }) {
   }, []);
 
   const handleBack = () => {
-    // no back on home
     if (path === '/' || path === '/index') return;
-    // profile should go to home
     if (path === '/profile') {
       router.replace('/');
       return;
@@ -35,65 +33,73 @@ export default function SafeScreen({ children }) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}> 
       <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
 
-      {/* Top header: single back arrow and right action group */}
-      <View style={[styles.topBar, { backgroundColor: theme.card }]}>
-        <View style={styles.left}>
-          {/* Hide the back arrow for auth routes (grouped under /(auth)) so
-              sign-in/sign-up render without a back button. Keep it for other
-              screens except home. */}
+      {/* Modern mobile header: back/profile/settings/signout, larger touch targets, more spacing */}
+      <View style={[styles.topBar, { backgroundColor: theme.card, paddingVertical: 8 }]}> 
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           {path !== '/' && !(path.startsWith('/(auth)') || path.startsWith('/sign') || path.startsWith('/forgot-password')) && (
-            <TouchableOpacity onPress={handleBack} style={styles.iconBtn}>
-              <Ionicons name="arrow-back" size={22} color={theme.text} />
+            <TouchableOpacity onPress={handleBack} style={[styles.iconBtn, { marginRight: 8 }]}> 
+              <Ionicons name="arrow-back" size={26} color={theme.text} />
             </TouchableOpacity>
           )}
-        </View>
-
-        <View style={styles.center}>
-          {/* optional title could be inserted by screens if needed */}
-        </View>
-
-        <View style={styles.right}>
-          {isSignedIn ? (
+          {/* Only show profile image and name when signed in and not on auth pages */}
+          {isSignedIn && !path.startsWith('/(auth)') && path !== '/' ? (
             <>
-              <TouchableOpacity onPress={() => router.push('/settings')} style={styles.iconBtn}>
-                <Ionicons name="settings-outline" size={22} color={theme.text} />
+              {profile?.imageUri ? (
+                <TouchableOpacity onPress={() => router.push('/profile')} style={{ marginRight: 12 }}>
+                  <Image source={{ uri: profile.imageUri }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+                </TouchableOpacity>
+              ) : null}
+              <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, flex: 1 }} numberOfLines={1}>
+                {profile?.name || 'Welcome'}
+              </Text>
+            </>
+          ) : (
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, flex: 1 }} numberOfLines={1}>
+              {path === '/' ? 'My Wallet' : 'Welcome'}
+            </Text>
+          )}
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {/* ThemeSwitcher should be available even when not signed in so users
+              can select dark or other themes in dev. Settings/SignOut show only when signed in. */}
+          <ThemeSwitcher compact />
+          {isSignedIn && !path.startsWith('/(auth)') && (
+            <>
+              <TouchableOpacity onPress={() => router.push('/settings')} style={styles.iconBtn}> 
+                <Ionicons name="settings-outline" size={24} color={theme.text} />
               </TouchableOpacity>
-
-              <ThemeSwitcher compact />
-
               <SignOutButton />
             </>
-          ) : null}
+          )}
         </View>
       </View>
 
       <View style={styles.content}>{children}</View>
 
-      {/* Bottom static nav (single) */}
       {isSignedIn && (
-        <View style={[styles.bottomNav, { backgroundColor: theme.card }]}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/')}>
-            <Ionicons name="home" size={22} color={theme.text} />
-            <Text style={{ color: theme.text, fontSize: 12 }}>Home</Text>
+        <View style={[styles.bottomNav, { backgroundColor: theme.card }]}> 
+          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/')}> 
+            <Ionicons name="home" size={24} color={theme.text} />
+            <Text style={{ color: theme.text, fontSize: 13 }}>Home</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/transactions')}>
-            <Ionicons name="list" size={22} color={theme.text} />
-            <Text style={{ color: theme.text, fontSize: 12 }}>Transactions</Text>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/transactions')}> 
+            <Ionicons name="list" size={24} color={theme.text} />
+            <Text style={{ color: theme.text, fontSize: 13 }}>Transactions</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/reports')}>
-            <Ionicons name="bar-chart" size={22} color={theme.text} />
-            <Text style={{ color: theme.text, fontSize: 12 }}>Reports</Text>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/reports')}> 
+            <Ionicons name="bar-chart" size={24} color={theme.text} />
+            <Text style={{ color: theme.text, fontSize: 13 }}>Reports</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}> 
             {profile?.imageUri ? (
               <Image source={{ uri: profile.imageUri }} style={styles.avatarSmall} />
             ) : (
-              <Ionicons name="person-circle" size={22} color={theme.text} />
+              <Ionicons name="person-circle" size={24} color={theme.text} />
             )}
-            <Text style={{ color: theme.text, fontSize: 12 }}>Profile</Text>
+            <Text style={{ color: theme.text, fontSize: 13 }}>Profile</Text>
           </TouchableOpacity>
         </View>
       )}

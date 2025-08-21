@@ -56,8 +56,16 @@ app.get("/api/health", (req, res) => {
 
 initDb()
   .then(() => {
-    const server = app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    const HOST = process.env.HOST || "0.0.0.0";
+    const server = app.listen(PORT, HOST, () => {
+      console.log(`Server is running on ${HOST}:${PORT}`);
+      try {
+        const addr = server.address();
+        console.log("server.address ->", addr);
+        console.log("env HOST, PORT ->", process.env.HOST, process.env.PORT);
+      } catch (e) {
+        console.warn("Could not read server.address()", e?.message || e);
+      }
     });
 
     server.on("error", (err) => {

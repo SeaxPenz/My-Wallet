@@ -42,18 +42,35 @@ export async function createTransaction(req, res) {
 export async function deleteTransaction(req, res) {
   try {
     const { id } = req.params;
+    console.log(
+      `[transactions] delete requested id=${id} from ${
+        req.ip || req.headers["x-forwarded-for"] || "unknown"
+      }`
+    );
     if (isNaN(parseInt(id))) {
       return res.status(400).json({ message: "Invalid transaction ID" });
     }
     const result =
       await sql`DELETE FROM transactions WHERE id = ${id} RETURNING *`;
+    console.log(
+      `[transactions] delete result for id=${id} -> rows=${result.length}`
+    );
     if (result.length === 0) {
       return res.status(404).json({ message: "Transaction not found" });
     }
-    res.status(200).json({ message: "Transaction deleted successfully" });
+    // return the deleted row for client debugging/testing
+    res
+      .status(200)
+      .json({
+        message: "Transaction deleted successfully",
+        deleted: result[0],
+      });
   } catch (error) {
     console.log("Error deleting transaction:", error);
-    return res.status(500).json({ error: "Failed to delete transaction" });
+    if (error && error.stack) console.error(error.stack);
+    return res
+      .status(500)
+      .json({ error: "Failed to delete transaction", details: error?.message });
   }
 }
 

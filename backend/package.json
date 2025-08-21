@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "src/server.js",
   "scripts": {
-  "dev": "nodemon src/server.js",
-  "start": "node src/server.js",
-  "migrate:run": "node ./scripts/runMigrations.js"
+    "start": "node src/server.js",
+    "migrate:run": "node ./scripts/runMigrations.js",
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "type": "module",

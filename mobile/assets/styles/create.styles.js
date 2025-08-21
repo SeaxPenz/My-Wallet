@@ -160,4 +160,11 @@ export const createCreateStyles = (theme) =>
       alignItems: "center",
       justifyContent: "center",
     },
+    footer: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 12,
+      paddingHorizontal: 16,
+    },
   });

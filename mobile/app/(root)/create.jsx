@@ -6,6 +6,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter } from "expo-router";
 import { useSafeUser as useUser } from "../../hooks/useSafeUser";
 import { useState } from "react";
@@ -113,7 +114,12 @@ const CreateScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      enableOnAndroid
+      keyboardShouldPersistTaps="handled"
+    >
       {/* HEADER */}
       <View style={styles.header}>
         {/* Left spacer kept so title is centered when SafeScreen renders the back arrow */}
@@ -236,8 +242,13 @@ const CreateScreen = () => {
         </View>
       </View>
 
-      {/* Bottom save button */}
-      <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      )}
+      {/* sticky footer */}
+      <View style={styles.footer} pointerEvents={isLoading ? 'none' : 'auto'}>
         <TouchableOpacity
           onPress={handleCreate}
           disabled={isLoading}
@@ -250,13 +261,7 @@ const CreateScreen = () => {
           {!isLoading && <Ionicons name="checkmark" size={18} color={theme.white} />}
         </TouchableOpacity>
       </View>
-
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
-      )}
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 export default CreateScreen;

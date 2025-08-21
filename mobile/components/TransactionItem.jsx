@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { createHomeStyles } from "../assets/styles/home.styles";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatCurrency } from "../lib/utils";
+import { useRouter } from 'expo-router';
 
 const CATEGORY_ICON_MAP = {
 	'food': 'fast-food',
@@ -30,6 +31,16 @@ export const TransactionItem = ({ item = {}, onDelete = () => {} }) => {
 	const { theme } = useTheme();
 	const styles = createHomeStyles(theme);
 
+	 const router = useRouter();
+
+	 const confirmDelete = () => {
+			// navigate to a dedicated confirmation page which will call the API
+			router.push(`/delete-transaction/${item.id}`);
+		};
+
+	const parsedDate = date ? new Date(date) : new Date();
+	const weekday = parsedDate.toLocaleDateString(undefined, { weekday: 'short' });
+
 	return (
 		<View style={styles.transactionCard}>
 			<View style={styles.transactionContent}>
@@ -46,15 +57,25 @@ export const TransactionItem = ({ item = {}, onDelete = () => {} }) => {
 				</View>
 								<View style={styles.transactionRight}>
 											<Text style={[styles.transactionAmount, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{formatCurrency(convert(amount), currency)}</Text>
-										<Text style={styles.transactionDate}>{date ? new Date(date).toLocaleString() : ''}</Text>
-										<Text style={[styles.transactionDate, { fontSize: 11, color: theme.textLight }]}>{date ? new Date(date).toLocaleDateString(undefined, { weekday: 'long' }) : ''}</Text>
+										<Text style={styles.transactionDate}>{parsedDate.toLocaleDateString()}</Text>
+										<Text style={[styles.transactionDate, { fontSize: 11, color: theme.textLight }]}>{weekday}</Text>
 								</View>
 			</View>
-			<TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(item.id)}>
+			<TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
 				<Ionicons name="trash" size={20} color={'#E74C3C'} />
 			</TouchableOpacity>
 		</View>
 	);
 };
+
+const styles = StyleSheet.create({
+  container: { flexDirection: 'row', justifyContent: 'space-between', padding: 12, alignItems: 'center' },
+  left: { flex: 1 },
+  right: { alignItems: 'flex-end' },
+  title: { fontSize: 16, fontWeight: '600' },
+  category: { fontSize: 13, marginTop: 4 },
+  date: { fontSize: 12, color: '#777', marginTop: 4 },
+  amount: { fontSize: 16, fontWeight: '700' },
+});
 
 export default TransactionItem;

@@ -35,7 +35,7 @@ export const createHomeStyles = (theme) =>
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: 10,
     },
     welcomeText: {
       fontSize: 13,
@@ -43,8 +43,8 @@ export const createHomeStyles = (theme) =>
       marginBottom: 0,
     },
     usernameText: {
-      fontSize: 18,
-      fontWeight: "600",
+      fontSize: 20,
+      fontWeight: "700",
       color: theme.text,
       marginTop: 2,
     },

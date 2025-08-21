@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useState } from 'react';
+import { View, TextInput, Text, TouchableOpacity, Image } from 'react-native';
 import useSafeSignUp from '../../hooks/useSafeSignUp';
 import { useRouter } from "expo-router";
-import { createAuthStyles } from "@/assets/styles/auth.styles.js";
+import { createAuthStyles } from "../../assets/styles/auth.styles";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -119,8 +118,8 @@ export default function SignUpScreen() {
 
   return (
     <KeyboardAwareScrollView
-      style={{ flex: 1, alignContent: "center", justifyContent: "center" }}
-      contentContainerStyle={{ flexGrow: 1 }}
+      style={{ flex: 1, alignContent: "center" }}
+      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
       enableOnAndroid={true}
       enableAutomaticScroll={true}
     >
