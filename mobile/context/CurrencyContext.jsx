@@ -56,23 +56,36 @@ export const CurrencyProvider = ({ children }) => {
   // fetch and optionally persist rates
   const fetchRates = async (force = false) => {
     try {
-      const symbols = Object.keys(available).join(",");
-      const res = await fetch(`https://api.exchangerate.host/latest?base=USD&symbols=${symbols}`);
+      // Prefer fetching rates from our backend proxy so the API key stays server-side
+      const apiBase = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:5002/api';
+      const url = `${apiBase.replace(/\/api\/?$/, '')}/api/rates/latest/USD`;
+      const res = await fetch(url);
       const data = await res.json();
+      // backend returns { rates: { USD: 1, EUR: ... }, ts, base }
       if (data && data.rates) {
-        const newRates = { ...data.rates, USD: 1 };
+        const fetched = data.rates;
+        // filter to only available currencies and ensure USD present
+        const newRates = Object.keys(available).reduce((acc, k) => {
+          acc[k] = fetched[k] || (k === 'USD' ? 1 : acc[k] || 1);
+          return acc;
+        }, { USD: 1 });
         setRates(newRates);
-  // bump version so consumers re-render with new rates immediately
-  setVersion(Date.now());
+  // debug: show fetched rates in Metro so we can verify conversion on device
+  // eslint-disable-next-line no-console
+  console.debug('[Currency] fetched rates (via backend):', newRates);
+        // bump version so consumers re-render with new rates immediately
+        setVersion(Date.now());
         try {
           await SecureStore.setItemAsync(STORE_KEY_RATES, JSON.stringify({ rates: newRates, ts: Date.now() }));
         } catch (err) {
           console.warn('Failed to persist rates', err);
         }
+      } else {
+        throw new Error('Invalid rates payload');
       }
     } catch (err) {
       if (force) throw err; // bubble up when caller requested force
-      console.warn('Failed to fetch exchange rates', err);
+      console.warn('Failed to fetch exchange rates from exchangerate-api:', err?.message || err);
     }
   };
 
@@ -90,6 +103,8 @@ export const CurrencyProvider = ({ children }) => {
   const setCurrency = async (code) => {
     if (!available[code]) return;
   setCurrencyState(available[code]);
+  // eslint-disable-next-line no-console
+  console.debug('[Currency] setCurrency ->', code);
     try {
       await SecureStore.setItemAsync(STORE_KEY, code);
     } catch (err) {

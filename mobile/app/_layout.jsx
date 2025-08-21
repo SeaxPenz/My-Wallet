@@ -24,7 +24,11 @@ export default function RootLayout() {
     console.warn(
       "Clerk publishable key is missing or invalid. Authentication features will be disabled. Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in mobile/.env with a valid key from https://dashboard.clerk.com"
     );
-    return (
+  // debug: print effective API URL and basic env info so Expo logs show what the client will call
+  // (we import lazily to avoid import cycles)
+  console.debug('[App] Using API_URL ->', process.env.EXPO_PUBLIC_API_URL);
+
+  return (
       <ThemeProvider>
         <CurrencyProvider>
           <SafeScreen>

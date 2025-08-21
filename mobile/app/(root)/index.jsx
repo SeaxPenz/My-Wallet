@@ -30,18 +30,9 @@ export default function Page() {
     user?.id
   );
 
-  // If no authenticated user (Clerk disabled in dev), show a helpful empty state
-  if (!user) {
-    return (
-      <View style={[styles.content, { alignItems: 'center', justifyContent: 'center', flex: 1 }]}>
-        <Text style={{ fontSize: 18, color: theme.text, marginBottom: 8 }}>You are not signed in</Text>
-        <Text style={{ color: theme.textLight, marginBottom: 12 }}>Authentication is disabled in this dev environment. Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in mobile/.env to enable sign-in.</Text>
-        <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')} style={{ backgroundColor: theme.primary, padding: 12, borderRadius: 8 }}>
-          <Text style={{ color: theme.white }}>Go to Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  // NOTE: we intentionally don't return early here so React Hooks below are
+  // always called in the same order. If the user is not present we'll render
+  // the sign-in prompt later after all hooks are registered.
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -121,7 +112,7 @@ export default function Page() {
             ) : null}
             <View style={{ flex: 1 }}>
               <Text style={styles.welcomeText}>Welcome,</Text>
-              <Text style={styles.usernameText} numberOfLines={1} ellipsizeMode="tail">
+              <Text style={[styles.usernameText, { color: theme.headerText || theme.text }]} numberOfLines={1} ellipsizeMode="tail">
                 {profile?.name?.split(' ')[0] || (user ? user.firstName || user.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] : '')}
               </Text>
               {/* DateTime in its own row, bold and visually distinct */}
@@ -149,7 +140,7 @@ export default function Page() {
       </View>
 
       <View style={styles.transactionsHeaderContainer}>
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
+        <Text style={[styles.sectionTitle, { color: theme.headerText || theme.text }]}>Recent Transactions</Text>
       </View>
     </View>
   );

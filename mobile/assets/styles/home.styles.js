@@ -45,7 +45,7 @@ export const createHomeStyles = (theme) =>
     usernameText: {
       fontSize: 20,
       fontWeight: "700",
-      color: theme.text,
+      color: theme.mode === "dark" ? "#000000" : theme.text,
       marginTop: 2,
     },
     headerAvatar: {

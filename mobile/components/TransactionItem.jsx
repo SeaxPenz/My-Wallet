@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { createHomeStyles } from "../assets/styles/home.styles";
 import { useTheme } from "../context/ThemeContext";
@@ -53,10 +53,10 @@ export const TransactionItem = ({ item = {}, onDelete = () => {} }) => {
 							</View>
 				<View style={styles.transactionLeft}>
 					<Text style={styles.transactionTitle}>{title}</Text>
-										<Text style={[styles.transactionCategory, { color: amount >= 0 ? (theme.income || '#2ECC71') : styles.transactionCategory.color }]}>{category}</Text>
+					<Text style={[styles.transactionCategory, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{category}</Text>
 				</View>
 								<View style={styles.transactionRight}>
-											<Text style={[styles.transactionAmount, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{formatCurrency(convert(amount), currency)}</Text>
+																	<Text style={[styles.transactionAmount, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{formatCurrency(convert(amount), currency)}</Text>
 										<Text style={styles.transactionDate}>{parsedDate.toLocaleDateString()}</Text>
 										<Text style={[styles.transactionDate, { fontSize: 11, color: theme.textLight }]}>{weekday}</Text>
 								</View>
@@ -68,14 +68,6 @@ export const TransactionItem = ({ item = {}, onDelete = () => {} }) => {
 	);
 };
 
-const styles = StyleSheet.create({
-  container: { flexDirection: 'row', justifyContent: 'space-between', padding: 12, alignItems: 'center' },
-  left: { flex: 1 },
-  right: { alignItems: 'flex-end' },
-  title: { fontSize: 16, fontWeight: '600' },
-  category: { fontSize: 13, marginTop: 4 },
-  date: { fontSize: 12, color: '#777', marginTop: 4 },
-  amount: { fontSize: 16, fontWeight: '700' },
-});
+// NOTE: styles are provided by createHomeStyles(theme) from assets/styles/home.styles
 
 export default TransactionItem;

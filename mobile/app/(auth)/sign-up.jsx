@@ -105,7 +105,7 @@ export default function SignUpScreen() {
           style={[styles.verificationInput, error && styles.errorInput]}
           value={code}
           placeholder="Enter your six-digit code"
-          placeholderTextColor="#9A8478"
+          placeholderTextColor={theme.textLight}
           onChangeText={(code) => setCode(code)}
         />
 
@@ -143,14 +143,14 @@ export default function SignUpScreen() {
           style={[styles.input, error && styles.errorInput]}
           value={firstName}
           placeholder="First Name"
-          placeholderTextColor="#9A8478"
+          placeholderTextColor={theme.textLight}
           onChangeText={setFirstName}
         />
         <TextInput
           style={[styles.input, error && styles.errorInput]}
           value={lastName}
           placeholder="Last Name"
-          placeholderTextColor="#9A8478"
+          placeholderTextColor={theme.textLight}
           onChangeText={setLastName}
         />
 
@@ -160,7 +160,7 @@ export default function SignUpScreen() {
           autoCapitalize="none"
           value={emailAddress}
           placeholder="Enter email"
-          placeholderTextColor="#9A8478"
+          placeholderTextColor={theme.textLight}
           onChangeText={setEmailAddress}
         />
 
@@ -169,7 +169,7 @@ export default function SignUpScreen() {
             style={[styles.inputWithIcon, error && styles.errorInput]}
             value={password}
             placeholder="Enter password"
-            placeholderTextColor="#9A8478"
+            placeholderTextColor={theme.textLight}
             secureTextEntry={true}
             onChangeText={setPassword}
           />

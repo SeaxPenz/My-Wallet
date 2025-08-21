@@ -21,11 +21,23 @@ export const BalanceCard = ({ summary = { balance: 0, income: 0, expenses: 0 }, 
 			<TouchableOpacity style={styles.refreshBtn} onPress={onRefresh}>
 				<Ionicons name="refresh" size={18} color={refreshColor} />
 			</TouchableOpacity>
-			<Text style={[styles.balanceText, { color: balanceColor }]}>{formatCurrency(displayBalance, currency || { code: 'USD', locale: 'en-US', symbol: '$' })}</Text>
-			<View style={styles.row}>
-				<Text style={[styles.income, { color: 'green' }]}>{formatCurrency(displayIncome, currency || { code: 'USD', locale: 'en-US', symbol: '$' })}</Text>
-				<Text style={[styles.expense, { color: '#E53935' }]}>{formatCurrency(Math.abs(displayExpenses), currency || { code: 'USD', locale: 'en-US', symbol: '$' })}</Text>
-			</View>
+			<Text
+				style={[styles.balanceText, { color: balanceColor }]}
+				numberOfLines={1}
+				ellipsizeMode="tail"
+				adjustsFontSizeToFit={true}
+				maxFontSizeMultiplier={1.1}
+			>{formatCurrency(displayBalance, currency || { code: 'USD', locale: 'en-US', symbol: '$' })}</Text>
+						<View style={styles.row}>
+								<View style={{ alignItems: 'flex-start' }}>
+									<Text style={[styles.label, { color: theme?.textLight || '#999' }]}>Income</Text>
+									<Text style={[styles.income, { color: theme?.income || 'green' }]}>{formatCurrency(displayIncome, currency || { code: 'USD', locale: 'en-US', symbol: '$' })}</Text>
+								</View>
+								<View style={{ alignItems: 'flex-end' }}>
+									<Text style={[styles.label, { color: theme?.textLight || '#999' }]}>Expenses</Text>
+									<Text style={[styles.expense, { color: theme?.expense || '#E53935' }]}>{formatCurrency(Math.abs(displayExpenses), currency || { code: 'USD', locale: 'en-US', symbol: '$' })}</Text>
+								</View>
+						</View>
 		</View>
 	);
 };
@@ -37,6 +49,7 @@ const styles = StyleSheet.create({
 	row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
 	income: { fontSize: 14, fontWeight: '700' },
 	expense: { fontSize: 14, fontWeight: '700' },
+	 label: { fontSize: 12, fontWeight: '600', opacity: 0.9 }
 });
 
 export default BalanceCard;

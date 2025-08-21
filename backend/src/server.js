@@ -8,6 +8,7 @@ import cors from "cors";
 import { initDb } from "./config/db.js";
 import rateLimiter from "./middleware/rateLimiter.js";
 import transactionsRoute from "./routes/transactionsRoute.js";
+import ratesRoute from "./routes/ratesRoute.js";
 import job from "./config/cron.js";
 
 const app = express();
@@ -42,6 +43,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/transactions", transactionsRoute);
+app.use("/api/rates", ratesRoute);
 
 const PORT = process.env.PORT || 5001; // allow overriding the port via env for local dev
 

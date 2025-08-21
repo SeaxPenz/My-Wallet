@@ -24,7 +24,7 @@ export default function DateTime({ syncApi = true, apiUrl }) {
           const offset = dt.getTime() - Date.now();
           setNow(new Date(Date.now() + offset));
         }
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     })();

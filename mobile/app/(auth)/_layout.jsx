@@ -5,6 +5,13 @@ import { View, Text } from 'react-native';
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
 const isClerkEnabled = typeof publishableKey === "string" && publishableKey.startsWith("pk_") && !publishableKey.toUpperCase().includes("PLACEHOLDER");
 
+function ClerkWrapper() {
+  const { useAuth } = require('@clerk/clerk-expo');
+  const { isSignedIn } = useAuth();
+  if (isSignedIn) return <Redirect href={'/'} />;
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+
 export default function AuthRoutesLayout() {
   if (!isClerkEnabled) {
     // Clerk not configured — render a minimal Stack that shows a helpful message using native components
@@ -22,11 +29,5 @@ export default function AuthRoutesLayout() {
     );
   }
 
-  // Clerk is enabled — import/use auth hooks lazily to avoid calling when disabled
-  const { useAuth } = require('@clerk/clerk-expo');
-  const { isSignedIn } = useAuth();
-
-  if (isSignedIn) return <Redirect href={"/"} />;
-
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return <ClerkWrapper />;
 }

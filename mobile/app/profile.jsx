@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Image, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from '../lib/secureStore';
 import { useTheme } from '../context/ThemeContext';
 import { API_URL } from '../constants/api';
@@ -9,7 +8,7 @@ import useSafeClerk from '../hooks/useSafeClerk';
 import { useRouter } from 'expo-router';
 
 export default function ProfilePage() {
-  const { theme } = useTheme();
+  const { theme, pickDeviceWallpaper } = useTheme();
   const { user } = useUser();
   const { updateUser } = useSafeClerk();
   const [name, setName] = useState(user?.fullName || '');
@@ -36,18 +35,13 @@ export default function ProfilePage() {
   }, []);
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
-    // Support both older (cancelled, uri) and newer (canceled, assets) shapes
-    if (result?.cancelled === false && result?.uri) {
-      setImageUri(result.uri);
-      return;
-    }
-    if (result?.canceled === false && result?.assets && result.assets.length) {
-      setImageUri(result.assets[0].uri);
-      return;
-    }
+    // use centralized picker helper to keep behavior consistent
+    const picked = await pickDeviceWallpaper?.();
+    if (picked && picked.uri) setImageUri(picked.uri);
+  };
+
+  const clearImage = () => {
+    setImageUri(null);
   };
 
   const saveProfile = async () => {
@@ -98,20 +92,25 @@ export default function ProfilePage() {
           </View>
         )}
       </TouchableOpacity>
+      {imageUri ? (
+        <TouchableOpacity onPress={clearImage} style={{ marginTop: 8 }}>
+          <Text style={{ color: theme.primary }}>Remove image</Text>
+        </TouchableOpacity>
+      ) : null}
 
       <View style={{ marginTop: 12 }}>
         <Text style={{ color: theme.textLight }}>Name</Text>
-        <TextInput value={name} onChangeText={setName} style={{ color: theme.text, borderBottomWidth: 1, borderBottomColor: theme.border }} />
+        <TextInput value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={theme.textLight} style={{ backgroundColor: theme.card, padding: 10, borderRadius: 8, color: theme.text, marginTop: 6 }} />
       </View>
 
       <View style={{ marginTop: 12 }}>
         <Text style={{ color: theme.textLight }}>Address</Text>
-        <TextInput value={address} onChangeText={setAddress} style={{ color: theme.text, borderBottomWidth: 1, borderBottomColor: theme.border }} />
+        <TextInput value={address} onChangeText={setAddress} placeholder="Address" placeholderTextColor={theme.textLight} style={{ backgroundColor: theme.card, padding: 10, borderRadius: 8, color: theme.text, marginTop: 6 }} />
       </View>
 
       <View style={{ marginTop: 12 }}>
         <Text style={{ color: theme.textLight }}>Contact</Text>
-        <TextInput value={contact} onChangeText={setContact} style={{ color: theme.text, borderBottomWidth: 1, borderBottomColor: theme.border }} />
+        <TextInput value={contact} onChangeText={setContact} placeholder="Phone or contact" placeholderTextColor={theme.textLight} style={{ backgroundColor: theme.card, padding: 10, borderRadius: 8, color: theme.text, marginTop: 6 }} />
       </View>
 
       <View style={{ marginTop: 18 }}>

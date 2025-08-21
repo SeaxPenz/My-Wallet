@@ -13,6 +13,7 @@ export default function SafeScreen({ children }) {
   const router = useRouter();
   const path = usePathname();
   const { theme } = useTheme();
+  const { wallpaper, wallpaperOpacity, wallpaperBrightness } = useTheme();
   const { isSignedIn } = useUser() || {};
   const [profile, setProfile] = useState(null);
 
@@ -36,6 +37,18 @@ export default function SafeScreen({ children }) {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}> 
       <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
 
+      {/* Wallpaper (if set) — render absolutely behind content */}
+      {wallpaper ? (
+        <Image source={ typeof wallpaper === 'string' ? { uri: wallpaper } : wallpaper }
+          style={[StyleSheet.absoluteFillObject, { width: '100%', height: '100%' }]}
+          resizeMode="cover"
+        />
+      ) : null}
+      {/* brightness/opacity overlay */}
+      {wallpaper ? (
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: `rgba(0,0,0,${1 - (wallpaperBrightness || 1)})`, opacity: wallpaperOpacity ?? 0.5 }]} pointerEvents="none" />
+      ) : null}
+
       {/* Modern mobile header: back/profile/settings/signout, larger touch targets, more spacing */}
       <View style={[styles.topBar, { backgroundColor: theme.card, paddingVertical: 8 }]}> 
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -52,12 +65,12 @@ export default function SafeScreen({ children }) {
                   <Image source={{ uri: profile.imageUri }} style={{ width: 40, height: 40, borderRadius: 20 }} />
                 </TouchableOpacity>
               ) : null}
-              <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, flex: 1 }} numberOfLines={1}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: theme.headerText || '#111', flex: 1 }} numberOfLines={1}>
                 {profile?.name || 'Welcome'}
               </Text>
             </>
           ) : (
-            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, flex: 1 }} numberOfLines={1}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.headerText || '#111', flex: 1 }} numberOfLines={1}>
               {path === '/' ? 'My Wallet' : 'Welcome'}
             </Text>
           )}
@@ -103,6 +116,11 @@ export default function SafeScreen({ children }) {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Developer credit footer */}
+      <View style={{ padding: 6, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: theme.textLight || '#666', fontSize: 11 }}>Developed by Abraham Ajetomobi</Text>
+      </View>
     </SafeAreaView>
   );
 }
@@ -114,7 +132,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center' },
   right: { width: 140, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
   iconBtn: { padding: 8, marginLeft: 6, borderRadius: 8 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { flex: 1 },
   bottomNav: { height: 64, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderTopWidth: 1, borderColor: '#00000015' },
   navItem: { alignItems: 'center' },
