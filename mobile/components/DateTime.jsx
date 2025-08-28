@@ -16,7 +16,10 @@ export default function DateTime({ syncApi = true, apiUrl }) {
     if (!syncApi) return;
     (async () => {
       try {
-        const resp = await fetch(apiUrl);
+        const devUserId = process.env.EXPO_DEV_USER_ID;
+        const headers = {};
+        if (devUserId && apiUrl && apiUrl.includes('my-wallet-bl80.onrender.com')) headers['x-user-id'] = devUserId;
+        const resp = await fetch(apiUrl, { headers });
         const json = await resp.json();
         const iso = json?.datetime || json?.formatted || json?.utc_datetime || (json?.unixtime ? new Date(json.unixtime * 1000).toISOString() : null);
         if (iso) {

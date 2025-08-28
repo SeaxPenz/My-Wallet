@@ -15,9 +15,10 @@ export async function initDb() {
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         amount NUMERIC NOT NULL,
-        category TEXT,
-        email TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  category TEXT,
+  note TEXT,
+  email TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `;
     console.log("Database connected and table created successfully.");

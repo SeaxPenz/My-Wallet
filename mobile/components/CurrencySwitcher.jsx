@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Modal, FlatList, StyleSheet } from 'react-native';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,11 +19,11 @@ export default function CurrencySwitcher({ compact = false }) {
 
   return (
     <View>
-      <TouchableOpacity style={themedStyles.trigger} onPress={() => setOpen(true)}>
+      <Pressable style={themedStyles.trigger} onPress={() => setOpen(true)} accessibilityRole="button">
         <Text style={{ color: theme.text, fontWeight: '700' }}>{currency.symbol}</Text>
         {!compact && <Text style={{ color: theme.text, marginLeft: 6 }}>{currency.code}</Text>}
         <Ionicons name="chevron-down" size={14} color={theme.text} style={{ marginLeft: 6 }} />
-      </TouchableOpacity>
+      </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
@@ -32,18 +32,22 @@ export default function CurrencySwitcher({ compact = false }) {
               data={items}
               keyExtractor={(i) => i.code}
               renderItem={({ item }) => (
-                <TouchableOpacity
+                <Pressable
       style={themedStyles.menuItem}
-                  onPress={() => {
-                    setCurrency(item.code);
-                    // refresh rates in background to ensure freshest rates and update UI instantly
-                    try { refreshRates(); } catch (_) { /* ignore */ }
+                  onPress={async () => {
+                    try {
+                      await setCurrency(item.code);
+                      // refresh rates in background but await to capture errors
+                      try { await refreshRates(); } catch (_e) { /* ignore */ }
+                    } catch (_e) {
+                      // ignore setCurrency errors — it already logs
+                    }
                     setOpen(false);
-                  }}
+                  }} accessibilityRole="button"
                 >
                   <Text style={{ color: theme.text }}>{item.symbol} {item.code}</Text>
                   {currency.code === item.code && <Ionicons name="checkmark" size={16} color={theme.primary} />}
-                </TouchableOpacity>
+                </Pressable>
               )}
             />
           </View>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, TextInput, PanResponder, Animated, Modal } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import CurrencySwitcher from '../components/CurrencySwitcher';
@@ -8,6 +9,7 @@ import { useCurrency } from '../context/CurrencyContext';
 export default function SettingsPage() {
   const { theme, wallpaper, setWallpaper, wallpaperOpacity, wallpaperBrightness, setWallpaperSettings, addCustomTheme, pickDeviceWallpaper, editDeviceWallpaper, cropDeviceWallpaper } = useTheme();
   const { currency } = useCurrency();
+  const router = useRouter();
 
   const thumbnails = [
     require('../assets/images/Pose-1.png'),
@@ -52,6 +54,17 @@ export default function SettingsPage() {
 
       <View style={{ marginTop: 20 }}>
         <Text style={{ color: theme.textLight }}>More settings will be available here.</Text>
+        <View style={{ marginTop: 12, flexDirection: 'row', gap: 12 }}>
+          <TouchableOpacity onPress={() => router.push('/backups')} style={{ padding: 10, backgroundColor: theme.card, borderRadius: 8, marginRight: 8 }}>
+            <Text style={{ color: theme.text }}>Backups</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/exports')} style={{ padding: 10, backgroundColor: theme.card, borderRadius: 8, marginRight: 8 }}>
+            <Text style={{ color: theme.text }}>Exports</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/templates')} style={{ padding: 10, backgroundColor: theme.card, borderRadius: 8 }}>
+            <Text style={{ color: theme.text }}>Templates</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={{ marginTop: 24 }}>
         <Text style={{ color: theme.text, marginBottom: 8 }}>Create Custom Theme</Text>
@@ -184,6 +197,7 @@ export default function SettingsPage() {
 
 // Simple slider component implemented with PanResponder and Animated to avoid extra deps
 function Slider({ value = 0.5, onChange = () => {}, min = 0, max = 1 }) {
+  const { theme } = useTheme();
   const pan = useRef(new Animated.Value(0)).current;
   const width = 240;
   // slider normalized value derived from `value` when needed inside effect
@@ -216,11 +230,11 @@ function Slider({ value = 0.5, onChange = () => {}, min = 0, max = 1 }) {
   const left = pan.interpolate({ inputRange: [0, width], outputRange: [0, width], extrapolate: 'clamp' });
   return (
     <View style={{ width, height: 36, justifyContent: 'center' }}>
-      <View style={{ height: 6, backgroundColor: '#ddd', borderRadius: 3 }} />
+      <View style={{ height: 6, backgroundColor: theme?.card === '#FFFFFF' ? '#ddd' : '#222', borderRadius: 3 }} />
       <Animated.View
         {...responder.panHandlers}
-        style={{ position: 'absolute', left: left, top: 0, width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#666' }} />
+        style={{ position: 'absolute', left: left, top: 0, width: 36, height: 36, borderRadius: 18, backgroundColor: theme?.card || '#fff', borderWidth: 1, borderColor: theme?.border || '#ccc', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: theme?.text || '#666' }} />
       </Animated.View>
     </View>
   );

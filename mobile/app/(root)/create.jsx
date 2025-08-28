@@ -9,6 +9,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter } from "expo-router";
 import { useSafeUser as useUser } from "../../hooks/useSafeUser";
+import useTransactions from '../../hooks/useTransactions';
 import { useState } from "react";
 import { API_URL } from "../../constants/api";
 import { createCreateStyles } from "../../assets/styles/create.styles";
@@ -33,6 +34,7 @@ const CreateScreen = () => {
   const styles = createCreateStyles(theme);
   const { toBase } = useCurrency();
   const { user } = useUser();
+  const { transactions, createTransaction, classifyTransaction } = useTransactions(user?.id || null);
 
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
@@ -53,6 +55,9 @@ const CreateScreen = () => {
 
     setIsLoading(true);
     try {
+  // debug: log user id and API endpoint so we can trace created transactions
+  console.log('[DEBUG] CreateScreen user.id ->', user?.id);
+  console.log('[DEBUG] CreateScreen API_URL ->', API_URL);
       // Format the amount (negative for expenses, positive for income)
       const parsed = parseFloat(amount.replace(/,/g, ''));
       if (isNaN(parsed) || parsed === 0) {
@@ -64,47 +69,113 @@ const CreateScreen = () => {
       // convert the user-entered amount (in selected currency) back to base (USD) for storage
       const formattedAmount = Number(toBase(formattedAmountLocal).toFixed(2));
 
+      // resolve user id (fall back to dev id in non-production to ease local testing)
+      const resolvedUserId = user?.id || (process.env.NODE_ENV !== 'production' ? (process.env.EXPO_DEV_USER_ID || 'dev-user-1') : null);
+      if (!resolvedUserId) {
+        Alert.alert('Error', 'No authenticated user found. Please sign in.');
+        setIsLoading(false);
+        return;
+      }
+
       // include user email for backend validation (some backends expect email)
       const email = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || '';
 
-    const response = await fetch(`${API_URL}/transactions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          email,
-          title,
-          amount: formattedAmount,
-          category: selectedCategory,
-      created_at: createdAt,
-        }),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Create failed:', response.status, text);
-        // try to parse JSON error body, fallback to raw text
+      // compute a small anomaly/good note + classification for UX before confirming save
+      const generatedNote = (() => {
         try {
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.error || JSON.stringify(errorData));
-        } catch (_parseErr) {
-          throw new Error(text || `HTTP ${response.status}`);
+          if (!transactions || transactions.length === 0) return null;
+          const same = transactions.filter(t => String(t.category || '').toLowerCase() === String(selectedCategory || '').toLowerCase()).map(t => Number(t.amount || 0));
+          if (same.length < 3) return null;
+          const mean = same.reduce((s,v)=>s+v,0)/same.length;
+          const variance = same.reduce((s,v)=>s+Math.pow(v-mean,2),0)/same.length;
+          const std = Math.sqrt(variance);
+          const amt = formattedAmount;
+          if (std === 0) return null;
+          const z = (amt - mean) / std;
+          if (Math.abs(z) >= 2) {
+            if (amt < mean) return `Unusually low for ${selectedCategory}`;
+            return `Unusually high for ${selectedCategory}`;
+          }
+          if (!isExpense && (amt - mean) / (std||1) > 1.5) return `Good income — higher than usual in ${selectedCategory}`;
+          return null;
+        } catch (e) {
+          return null;
         }
+      })();
+
+      // classification using the hook helper (works even with small history)
+      let classification = { label: 'normal', note: null };
+      try {
+        if (classifyTransaction) classification = classifyTransaction(formattedAmount, selectedCategory || '');
+      } catch (e) {
+        classification = { label: 'unknown', note: null };
       }
 
-      const createdText = await response.text();
-      let created = null;
-      try {
-        created = JSON.parse(createdText);
-        console.log('Created transaction:', created);
-      } catch (_err) {
-        console.warn('Created response was not JSON:', createdText);
+      // Ask the user to confirm save, showing the classification/note.
+      const messageParts = [];
+      if (generatedNote) messageParts.push(generatedNote);
+      if (classification && classification.note) messageParts.push(classification.note);
+      const message = messageParts.length ? messageParts.join('\n') : 'Save this transaction?';
+
+      // In development, skip the confirmation dialog to make it easy to test
+      // whether the client can reach the backend. In production we still show
+      // the confirmation modal.
+      if (process.env.NODE_ENV !== 'production') {
+        setIsLoading(true);
+        try {
+          const payload = {
+            user_id: resolvedUserId,
+            email,
+            title,
+            amount: formattedAmount,
+            category: selectedCategory,
+            note: generatedNote || classification.note || '',
+            created_at: createdAt,
+          };
+          await createTransaction(payload);
+          Alert.alert('Success', generatedNote ? `Transaction created. ${generatedNote}` : 'Transaction created successfully');
+          router.push('/');
+        } catch (err) {
+          console.error('Create error', err);
+          Alert.alert('Error', err?.message || 'Failed to create transaction');
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        Alert.alert(
+          'Confirm transaction',
+          message,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Confirm',
+              onPress: async () => {
+                setIsLoading(true);
+                try {
+                  const payload = {
+                    user_id: resolvedUserId,
+                    email,
+                    title,
+                    amount: formattedAmount,
+                    category: selectedCategory,
+                    note: generatedNote || classification.note || '',
+                    created_at: createdAt,
+                  };
+                  await createTransaction(payload);
+                  Alert.alert('Success', generatedNote ? `Transaction created. ${generatedNote}` : 'Transaction created successfully');
+                  router.push('/');
+                } catch (err) {
+                  console.error('Create error', err);
+                  Alert.alert('Error', err?.message || 'Failed to create transaction');
+                } finally {
+                  setIsLoading(false);
+                }
+              },
+            },
+          ],
+          { cancelable: true }
+        );
       }
-  Alert.alert("Success", "Transaction created successfully");
-  // Ensure we go to home and trigger its focus effect which reloads data
-  router.replace('/');
     } catch (error) {
       Alert.alert("Error", error.message || "Failed to create transaction");
       console.error("Error creating transaction:", error);
@@ -247,8 +318,8 @@ const CreateScreen = () => {
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
       )}
-      {/* sticky footer */}
-      <View style={styles.footer} pointerEvents={isLoading ? 'none' : 'auto'}>
+  {/* sticky footer */}
+  <View style={[styles.footer, { pointerEvents: isLoading ? 'none' : 'auto' }]}>
         <TouchableOpacity
           onPress={handleCreate}
           disabled={isLoading}

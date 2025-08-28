@@ -54,38 +54,76 @@ export const CurrencyProvider = ({ children }) => {
   }, []);
 
   // fetch and optionally persist rates
-  const fetchRates = async (force = false) => {
+  // fetch and optionally persist rates (single consolidated implementation)
+  const fetchRates = async (force = false, base = "USD") => {
     try {
       // Prefer fetching rates from our backend proxy so the API key stays server-side
-      const apiBase = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:5002/api';
-      const url = `${apiBase.replace(/\/api\/?$/, '')}/api/rates/latest/USD`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const apiBase = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:5001/api';
+      const normalized = apiBase.replace(/\/api\/?$/, '');
+      const url = `${normalized}/api/rates/latest/${base}`;
+
+      // Add dev header for rate-limiter bypass
+      const devUserId = process.env.EXPO_DEV_USER_ID;
+      const headers = {};
+      if (devUserId) headers['x-user-id'] = devUserId;
+
+      const res = await fetch(url, { headers });
+      const data = await (async () => {
+        try { return await res.json(); } catch (e) { return null; }
+      })();
+
+      if (!res.ok) {
+        const txt = data && typeof data === 'object' ? JSON.stringify(data) : undefined;
+        throw new Error(`HTTP ${res.status} ${txt || ''}`);
+      }
+
       // backend returns { rates: { USD: 1, EUR: ... }, ts, base }
-      if (data && data.rates) {
-        const fetched = data.rates;
-        // filter to only available currencies and ensure USD present
-        const newRates = Object.keys(available).reduce((acc, k) => {
-          acc[k] = fetched[k] || (k === 'USD' ? 1 : acc[k] || 1);
-          return acc;
-        }, { USD: 1 });
-        setRates(newRates);
-  // debug: show fetched rates in Metro so we can verify conversion on device
-  // eslint-disable-next-line no-console
-  console.debug('[Currency] fetched rates (via backend):', newRates);
-        // bump version so consumers re-render with new rates immediately
-        setVersion(Date.now());
-        try {
-          await SecureStore.setItemAsync(STORE_KEY_RATES, JSON.stringify({ rates: newRates, ts: Date.now() }));
-        } catch (err) {
-          console.warn('Failed to persist rates', err);
-        }
-      } else {
+      if (!data || typeof data !== 'object' || typeof data.rates !== 'object') {
         throw new Error('Invalid rates payload');
       }
+
+      const fetched = data.rates || {};
+      // filter to only available currencies and ensure USD present
+      const newRates = Object.keys(available).reduce((acc, k) => {
+        acc[k] = typeof fetched[k] === 'number' ? fetched[k] : (k === 'USD' ? 1 : acc[k] || 1);
+        return acc;
+      }, { USD: 1 });
+
+      setRates(newRates);
+      // debug: show fetched rates
+      // eslint-disable-next-line no-console
+      console.debug('[Currency] fetched rates (via backend):', newRates);
+      setVersion(Date.now());
+
+      try {
+        await SecureStore.setItemAsync(STORE_KEY_RATES, JSON.stringify({ rates: newRates, ts: Date.now(), base }));
+      } catch (err) {
+        console.warn('Failed to persist rates', err);
+      }
+
+      return newRates;
     } catch (err) {
-      if (force) throw err; // bubble up when caller requested force
-      console.warn('Failed to fetch exchange rates from exchangerate-api:', err?.message || err);
+      // If caller forced a refresh, bubble up the error, otherwise try cached fallback
+      if (force) {
+        throw err;
+      }
+
+      console.warn('Failed to fetch exchange rates, attempting cached fallback:', err?.message || err);
+      try {
+        const raw = await SecureStore.getItemAsync(STORE_KEY_RATES);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.rates) {
+            setRates(parsed.rates);
+            return parsed.rates;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to read cached rates', e);
+      }
+
+      // final: rethrow original error so callers can decide
+      throw err;
     }
   };
 

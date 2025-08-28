@@ -1,0 +1,12 @@
+DATABASE_URL: postgresql://neondb_owner:npg_QvgM12maSVyu@ep-fragrant-cell-aeeukcvx-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+Database connected and table created successfully.
+Server is running on 0.0.0.0:5001
+server.address -> { address: '0.0.0.0', family: 'IPv4', port: 5001 }
+env HOST, PORT -> undefined 5001
+[API] GET /api/rates/latest/USD
+[API] GET /api/health
+[API] GET /api/rates/latest/USD
+[API] GET /api/transactions/user_31NdscfUDs43JpY1bHEisP46jBf
+[API] GET /api/transactions/user_31NdscfUDs43JpY1bHEisP46jBf
+[API] GET /
+[API] GET /api/health

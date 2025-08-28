@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, Modal, Pressable, StyleSheet, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { View, TouchableOpacity, Text, Modal, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
@@ -22,7 +22,7 @@ export default function ThemeSwitcher({ compact = false }) {
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
           {/* Menu container: align to top-right and don't close when tapping inside */}
           <View style={[styles.menu, { backgroundColor: theme.card }]}>
-            <TouchableWithoutFeedback onPress={() => { /* swallow touch so backdrop doesn't receive it */ }}>
+            <Pressable onPress={() => { /* swallow touch so backdrop doesn't receive it */ }}>
               <ScrollView style={{ maxHeight: '55%' }} contentContainerStyle={{ paddingVertical: 6 }}>
                 {items.map(item => (
                   <TouchableOpacity
@@ -44,7 +44,7 @@ export default function ThemeSwitcher({ compact = false }) {
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-            </TouchableWithoutFeedback>
+            </Pressable>
           </View>
         </Pressable>
       </Modal>

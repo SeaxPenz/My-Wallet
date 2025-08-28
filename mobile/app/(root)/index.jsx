@@ -1,4 +1,5 @@
 import { useSafeUser as useUser } from "../../hooks/useSafeUser";
+import { API_URL } from "../../constants/api";
 import { useRouter } from "expo-router";
 import { Alert, FlatList, RefreshControl, Text, TouchableOpacity, View, Image } from "react-native";
 import useTransactions from "../../hooks/useTransactions";
@@ -15,6 +16,7 @@ import { BalanceCard } from "../../components/BalanceCard";
 import Svg, { G, Circle } from 'react-native-svg';
 import { TransactionItem } from "../../components/TransactionItem";
 import NoTransactionsFound from "../../components/NoTransactionsFound";
+import CurrencySwitcher from '../../components/CurrencySwitcher';
 
 
 export default function Page() {
@@ -29,6 +31,16 @@ export default function Page() {
   const { transactions, summary, isLoading, loadData, deleteTransaction } = useTransactions(
     user?.id
   );
+
+  useEffect(() => {
+    // lightweight debug: show which user the home screen thinks is active
+    console.log('[DEBUG] Home screen user.id ->', user?.id);
+    console.log('[DEBUG] Home screen API_URL ->', API_URL);
+  }, [user]);
+
+  useEffect(() => {
+    console.log('[DEBUG] Home screen transactions count ->', Array.isArray(transactions) ? transactions.length : transactions);
+  }, [transactions]);
 
   // NOTE: we intentionally don't return early here so React Hooks below are
   // always called in the same order. If the user is not present we'll render
@@ -112,7 +124,7 @@ export default function Page() {
             ) : null}
             <View style={{ flex: 1 }}>
               <Text style={styles.welcomeText}>Welcome,</Text>
-              <Text style={[styles.usernameText, { color: theme.headerText || theme.text }]} numberOfLines={1} ellipsizeMode="tail">
+              <Text style={styles.usernameText} numberOfLines={1} ellipsizeMode="tail">
                 {profile?.name?.split(' ')[0] || (user ? user.firstName || user.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] : '')}
               </Text>
               {/* DateTime in its own row, bold and visually distinct */}
@@ -123,10 +135,18 @@ export default function Page() {
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.addButton} onPress={() => router.push("/create")}> 
-            <Ionicons name="add" size={20} color={theme.white} />
-            <Text style={styles.addButtonText}>Add</Text>
-          </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity style={[styles.iconButton, { marginRight: 8 }]} onPress={() => router.push('/settings')}>
+                <Ionicons name="settings" size={20} color={theme.white} />
+              </TouchableOpacity>
+              <View style={{ marginRight: 8, alignItems: 'center', justifyContent: 'center' }}>
+                <CurrencySwitcher compact />
+              </View>
+              <TouchableOpacity style={styles.addButton} onPress={() => router.push("/create")}> 
+                <Ionicons name="add" size={20} color={theme.white} />
+                <Text style={styles.addButtonText}>Add</Text>
+              </TouchableOpacity>
+            </View>
         </View>
       </View>
 

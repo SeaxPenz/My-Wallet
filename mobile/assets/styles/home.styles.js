@@ -39,13 +39,13 @@ export const createHomeStyles = (theme) =>
     },
     welcomeText: {
       fontSize: 13,
-      color: theme.textLight,
+      color: "#000", // always black for contrast per design request
       marginBottom: 0,
     },
     usernameText: {
       fontSize: 20,
       fontWeight: "700",
-      color: theme.mode === "dark" ? "#000000" : theme.text,
+      color: "#000", // always black irrespective of theme
       marginTop: 2,
     },
     headerAvatar: {
@@ -72,16 +72,16 @@ export const createHomeStyles = (theme) =>
       borderRadius: 24,
       flexDirection: "row",
       alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
       ...Platform.select({
-        web: {
-          boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
+        web: { __web: { boxShadow: "0px 2px 4px rgba(0,0,0,0.1)" } },
+        default: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
         },
       }),
-      elevation: 3,
     },
     addButtonText: {
       color: theme.white,
@@ -92,14 +92,16 @@ export const createHomeStyles = (theme) =>
       padding: 10,
       borderRadius: 20,
       backgroundColor: theme.card,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
       ...Platform.select({
-        web: { boxShadow: "0px 1px 2px rgba(0,0,0,0.05)" },
+        web: { __web: { boxShadow: "0px 1px 2px rgba(0,0,0,0.05)" } },
+        default: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 2,
+          elevation: 1,
+        },
       }),
-      elevation: 1,
     },
     balanceCard: {
       backgroundColor: theme.card,
@@ -107,17 +109,16 @@ export const createHomeStyles = (theme) =>
       padding: 26,
       minHeight: 140,
       marginBottom: 20,
-      shadowColor: theme.shadow,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
       ...Platform.select({
-        web: { boxShadow: `0px 2px 3px ${theme.shadow}1A` },
+        web: { __web: { boxShadow: `0px 2px 3px ${theme.shadow}1A` } },
+        default: {
+          shadowColor: theme.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 3,
+        },
       }),
-      elevation: 3,
     },
     balanceTitle: {
       fontSize: 16,
@@ -163,17 +164,16 @@ export const createHomeStyles = (theme) =>
       marginBottom: 10,
       flexDirection: "row",
       alignItems: "center",
-      shadowColor: theme.shadow,
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
       ...Platform.select({
-        web: { boxShadow: `0px 1px 2px ${theme.shadow}1A` },
+        web: { __web: { boxShadow: `0px 1px 2px ${theme.shadow}1A` } },
+        default: {
+          shadowColor: theme.shadow,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          elevation: 2,
+        },
       }),
-      elevation: 2,
     },
     transactionContent: {
       flex: 1,
@@ -202,6 +202,11 @@ export const createHomeStyles = (theme) =>
     transactionCategory: {
       fontSize: 14,
       color: theme.textLight,
+    },
+    transactionNote: {
+      fontSize: 12,
+      color: theme.textLight,
+      opacity: 0.9,
     },
     transactionRight: {
       alignItems: "flex-end",
@@ -237,14 +242,16 @@ export const createHomeStyles = (theme) =>
       alignItems: "center",
       justifyContent: "center",
       marginTop: 10,
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
       ...Platform.select({
-        web: { boxShadow: `0px 1px 2px ${theme.shadow}1A` },
+        web: { __web: { boxShadow: `0px 1px 2px ${theme.shadow}1A` } },
+        default: {
+          shadowColor: theme.shadow,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          elevation: 2,
+        },
       }),
-      elevation: 2,
     },
     emptyStateIcon: {
       marginBottom: 16,
@@ -269,12 +276,16 @@ export const createHomeStyles = (theme) =>
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: 20,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      ...Platform.select({ web: { boxShadow: "0px 2px 3px rgba(0,0,0,0.1)" } }),
-      elevation: 2,
+      ...Platform.select({
+        web: { __web: { boxShadow: "0px 2px 3px rgba(0,0,0,0.1)" } },
+        default: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 2,
+        },
+      }),
     },
     emptyStateButtonText: {
       color: theme.white,

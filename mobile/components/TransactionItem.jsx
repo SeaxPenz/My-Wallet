@@ -1,11 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { createHomeStyles } from "../assets/styles/home.styles";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatCurrency } from "../lib/utils";
 import { useRouter } from 'expo-router';
+import { useBalanceVisibility } from '../context/BalanceVisibilityContext';
 
 const CATEGORY_ICON_MAP = {
 	'food': 'fast-food',
@@ -30,11 +31,19 @@ export const TransactionItem = ({ item = {}, onDelete = () => {} }) => {
 		const { currency, convert } = useCurrency();
 	const { theme } = useTheme();
 	const styles = createHomeStyles(theme);
+		const { visible: showBalance } = useBalanceVisibility();
 
 	 const router = useRouter();
 
 	 const confirmDelete = () => {
 			// navigate to a dedicated confirmation page which will call the API
+			if (!item || !item.id) {
+				if (process.env.NODE_ENV !== 'production') {
+					// eslint-disable-next-line no-console
+					console.warn('[TransactionItem] blocked delete navigation: missing item.id', item);
+				}
+				return;
+			}
 			router.push(`/delete-transaction/${item.id}`);
 		};
 
@@ -54,16 +63,17 @@ export const TransactionItem = ({ item = {}, onDelete = () => {} }) => {
 				<View style={styles.transactionLeft}>
 					<Text style={styles.transactionTitle}>{title}</Text>
 					<Text style={[styles.transactionCategory, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{category}</Text>
+					{item.note ? <Text style={[styles.transactionNote, { color: theme.textLight, marginTop: 4 }]} numberOfLines={2}>{item.note}</Text> : null}
 				</View>
 								<View style={styles.transactionRight}>
-																	<Text style={[styles.transactionAmount, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{formatCurrency(convert(amount), currency)}</Text>
-										<Text style={styles.transactionDate}>{parsedDate.toLocaleDateString()}</Text>
-										<Text style={[styles.transactionDate, { fontSize: 11, color: theme.textLight }]}>{weekday}</Text>
+													                    <Text style={[styles.transactionAmount, { color: amount >= 0 ? (theme.income || '#2ECC71') : (theme.expense || '#E74C3C') }]}>{showBalance ? formatCurrency(convert(amount), currency) : '•••'}</Text>
+													                    <Text style={[styles.transactionDate, { color: theme.textLight }]}>{parsedDate.toLocaleDateString()}</Text>
+													                    <Text style={[styles.transactionDate, { fontSize: 11, color: theme.textLight }]}>{weekday}</Text>
 								</View>
-			</View>
-			<TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
-				<Ionicons name="trash" size={20} color={'#E74C3C'} />
-			</TouchableOpacity>
+															</View>
+															<Pressable style={({ hovered }) => [styles.deleteButton, hovered && { opacity: 0.8 }]} onPress={confirmDelete}>
+																<Ionicons name="trash" size={20} color={'#E74C3C'} />
+															</Pressable>
 		</View>
 	);
 };
